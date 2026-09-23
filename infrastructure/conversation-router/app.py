@@ -52,19 +52,8 @@ async def worker() -> None:
             item = tickets.get(ticket)
             if not item:
                 queue.task_done()
-
-
-async def model_is_ready() -> bool:
-    """Only accept traffic once vLLM exposes the configured model."""
-    try:
-        async with httpx.AsyncClient(timeout=3) as client:
-            response = await client.get(VLLM_MODELS_URL)
-            response.raise_for_status()
-            models = response.json().get("data", [])
-            return any(item.get("id") == MODEL for item in models if isinstance(item, dict))
-    except (httpx.HTTPError, TypeError, ValueError):
-        return False
                 continue
+
             item["status"] = "processing"
             payload: RouteRequest = item.pop("payload")
             try:
@@ -75,6 +64,7 @@ async def model_is_ready() -> bool:
                     "max_tokens": 90,
                     "response_format": {"type": "json_object"},
                 })
+                response.raise_for_status()
                 raw = response.json()["choices"][0]["message"]["content"]
                 selected = json.loads(raw)
                 allowed = {topic.id for topic in payload.topics}
@@ -90,6 +80,18 @@ async def model_is_ready() -> bool:
                 item["status"] = "ready"
                 item["expires_at"] = time.monotonic() + RESULT_TTL_SECONDS
                 queue.task_done()
+
+
+async def model_is_ready() -> bool:
+    """Only accept traffic once vLLM exposes the configured model."""
+    try:
+        async with httpx.AsyncClient(timeout=3) as client:
+            response = await client.get(VLLM_MODELS_URL)
+            response.raise_for_status()
+            models = response.json().get("data", [])
+            return any(item.get("id") == MODEL for item in models if isinstance(item, dict))
+    except (httpx.HTTPError, TypeError, ValueError):
+        return False
 
 
 @app.on_event("startup")
