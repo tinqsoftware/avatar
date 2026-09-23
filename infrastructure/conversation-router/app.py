@@ -94,10 +94,21 @@ async def model_is_ready() -> bool:
         return False
 
 
+async def expire_results() -> None:
+    """Discard completed selections even when a browser abandons its ticket."""
+    while True:
+        now = time.monotonic()
+        for ticket, item in list(tickets.items()):
+            if item.get("status") == "ready" and item.get("expires_at", now + 1) < now:
+                tickets.pop(ticket, None)
+        await asyncio.sleep(15)
+
+
 @app.on_event("startup")
 async def start_workers() -> None:
     for _ in range(MAX_ACTIVE):
         asyncio.create_task(worker())
+    asyncio.create_task(expire_results())
 
 
 @app.get("/health")
