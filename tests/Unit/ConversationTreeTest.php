@@ -23,7 +23,7 @@ class ConversationTreeTest extends TestCase
         $lines = (new ConversationTree)->lines((new ConversationTree)->validate($tree));
 
         $this->assertSame('Resumen.', $lines['topic.agua.summary.0']);
-        $this->assertCount(6, $lines);
+        $this->assertCount(10, $lines);
     }
 
     public function test_rejects_a_tree_without_connectors(): void

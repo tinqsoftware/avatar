@@ -42,7 +42,7 @@ def require_token(router_token: str | None) -> None:
 
 def prompt(payload: RouteRequest) -> str:
     candidates = [{"id": topic.id, "title": topic.title, "keywords": topic.keywords} for topic in payload.topics]
-    return """Eres un enrutador, no un redactor. Elige solamente un tema permitido para una conversación con respuestas pregrabadas. No inventes datos ni devuelvas explicaciones. Si el usuario pide continuar, usa action continue. Si ningún tema encaja, usa action fallback y topic_id vacío. Responde JSON con topic_id, stage (summary/detail/next), action (select/continue/fallback) y confidence entre 0 y 1.\n\n""" + json.dumps({"transcript": payload.transcript, "state": payload.state, "topics": candidates}, ensure_ascii=False)
+    return """Eres un enrutador, no un redactor. Elige entre uno y tres temas permitidos, conservando el orden en que la persona los menciona. No inventes datos ni devuelvas explicaciones. Si pide continuar sin nombrar un tema, usa solamente el último tema del estado con action continue. Para temas nuevos usa action select. Si ningún tema encaja, responde {\"items\": []}. Responde solamente JSON con {\"items\":[{\"topic_id\":\"...\",\"stage\":\"summary|detail|next\",\"action\":\"select|continue\"}]}.\n\n""" + json.dumps({"transcript": payload.transcript, "state": payload.state, "topics": candidates}, ensure_ascii=False)
 
 
 async def worker() -> None:
@@ -61,17 +61,34 @@ async def worker() -> None:
                     "model": MODEL,
                     "messages": [{"role": "system", "content": "Return only JSON."}, {"role": "user", "content": prompt(payload)}],
                     "temperature": 0,
-                    "max_tokens": 90,
+                    "max_tokens": 220,
                     "response_format": {"type": "json_object"},
                 })
                 response.raise_for_status()
                 raw = response.json()["choices"][0]["message"]["content"]
                 selected = json.loads(raw)
                 allowed = {topic.id for topic in payload.topics}
-                if selected.get("action") == "fallback":
+                items = selected.get("items")
+                if not isinstance(items, list) or not items or len(items) > 3:
                     item["result"] = {"status": "fallback"}
-                elif selected.get("topic_id") in allowed and selected.get("stage") in {"summary", "detail", "next"}:
-                    item["result"] = {"status": "ready", "topic_id": selected["topic_id"], "stage": selected["stage"], "action": selected.get("action", "select")}
+                elif all(
+                    isinstance(selected_item, dict)
+                    and selected_item.get("topic_id") in allowed
+                    and selected_item.get("stage") in {"summary", "detail", "next"}
+                    and selected_item.get("action", "select") in {"select", "continue"}
+                    for selected_item in items
+                ) and len({selected_item["topic_id"] for selected_item in items}) == len(items):
+                    item["result"] = {
+                        "status": "ready",
+                        "items": [
+                            {
+                                "topic_id": selected_item["topic_id"],
+                                "stage": selected_item["stage"],
+                                "action": selected_item.get("action", "select"),
+                            }
+                            for selected_item in items
+                        ],
+                    }
                 else:
                     item["result"] = {"status": "fallback"}
             except (httpx.HTTPError, KeyError, TypeError, ValueError, json.JSONDecodeError):

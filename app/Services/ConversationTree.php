@@ -32,7 +32,7 @@ class ConversationTree
     {
         $this->variants($tree['greeting']['variants'] ?? null, 'greeting.variants');
         $this->variants($tree['fallback']['variants'] ?? null, 'fallback.variants');
-        $this->variants($tree['connectors'] ?? null, 'connectors');
+        $this->validateConnectors($tree['connectors'] ?? null);
 
         if (! is_array($tree['topics'] ?? null) || $tree['topics'] === []) {
             throw new InvalidArgumentException('El árbol debe incluir al menos un tema.');
@@ -93,8 +93,10 @@ class ConversationTree
                 $lines["{$section}.{$index}"] = $text;
             }
         }
-        foreach ($tree['connectors'] as $index => $text) {
-            $lines["connector.{$index}"] = $text;
+        foreach ($this->connectorFamilies($tree) as $family => $variants) {
+            foreach ($variants as $index => $text) {
+                $lines["connector.{$family}.{$index}"] = $text;
+            }
         }
         foreach ($tree['topics'] as $topic) {
             foreach (['summary', 'detail', 'next'] as $stage) {
@@ -105,5 +107,37 @@ class ConversationTree
         }
 
         return $lines;
+    }
+
+    /**
+     * @return array<string, list<string>>
+     */
+    public function connectorFamilies(array $tree): array
+    {
+        $connectors = $tree['connectors'];
+        if (array_is_list($connectors)) {
+            return array_fill_keys(['queue', 'multi_intro', 'multi_bridge', 'multi_outro', 'continue_last'], $connectors);
+        }
+
+        return collect($connectors)
+            ->map(fn (array $connector): array => $connector['variants'])
+            ->all();
+    }
+
+    private function validateConnectors(mixed $connectors): void
+    {
+        if (! is_array($connectors)) {
+            throw new InvalidArgumentException('connectors debe incluir familias de variantes.');
+        }
+
+        if (array_is_list($connectors)) {
+            $this->variants($connectors, 'connectors');
+
+            return;
+        }
+
+        foreach (['queue', 'multi_intro', 'multi_bridge', 'multi_outro', 'continue_last'] as $family) {
+            $this->variants($connectors[$family]['variants'] ?? null, "connectors.{$family}.variants");
+        }
     }
 }

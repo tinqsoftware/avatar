@@ -2,16 +2,12 @@
 
 namespace Database\Seeders;
 
-use App\Models\AudioAsset;
 use App\Models\Avatar;
 use App\Services\ConversationTree;
 use Illuminate\Database\Seeder;
 
 class AvatarDemoSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
         $avatar = Avatar::updateOrCreate(
@@ -21,7 +17,7 @@ class AvatarDemoSeeder extends Seeder
                 'public_title' => 'Gobierno Regional de Ica · Demo',
                 'voice_profile' => 'anita',
                 'rive_path' => 'assets/avatar/anita.riv',
-                'status' => 'published',
+                'status' => 'draft',
             ],
         );
 
@@ -29,28 +25,120 @@ class AvatarDemoSeeder extends Seeder
             'greeting' => ['variants' => [
                 'Hola, soy Anita. Esta es una demostración ficticia de propuestas para el Gobierno Regional de Ica. ¿Sobre qué tema te gustaría conversar?',
                 'Bienvenida o bienvenido. Soy Anita y te acompañaré en esta demostración ficticia para Ica. Puedes preguntarme por seguridad, agua, empleo, vías o presupuesto.',
+                'Qué gusto conversar contigo. Soy Anita y puedo presentar los ejes ficticios de esta demostración regional.',
+                'Estoy lista para ayudarte a recorrer esta propuesta demostrativa. Dime qué inquietud tienes sobre agua, seguridad, empleo, vías o presupuesto.',
+                'Hola. En este espacio demo podemos revisar propuestas ficticias y pasar de un tema a otro con calma.',
+                'Soy Anita. Recuerda que toda la información que escucharás es demostrativa; elige el asunto que quieres explorar.',
             ]],
             'fallback' => ['variants' => [
-                'Puedo orientarte sobre seguridad, agua, empleo, vías, presupuesto y participación ciudadana dentro de esta demostración ficticia.',
-                'No encontré ese tema en esta propuesta demostrativa. Si quieres, pregúntame por agua, empleo, seguridad, vías o presupuesto.',
+                'No encontré ese tema dentro de esta demostración ficticia. Si quieres, pregúntame por agua, seguridad, empleo, vías o presupuesto.',
+                'Esa consulta no figura en los ejes demo que tengo disponibles. Puedo orientarte sobre agua, seguridad, empleo, vías y presupuesto.',
+                'Para no inventar información, prefiero quedarme en los temas de esta demostración: agua, seguridad, empleo, vías o presupuesto.',
+                'No tengo una respuesta demostrativa preparada para ese asunto. Podemos revisar cualquiera de los cinco ejes disponibles.',
+                'Ese punto queda fuera de este árbol ficticio. Dime si quieres conversar sobre servicios, seguridad, trabajo, conectividad o presupuesto.',
+                'No lo ubiqué entre las propuestas demo. Estoy lista para continuar con agua, seguridad, empleo, vías o presupuesto.',
             ]],
-            'connectors' => ['Claro, déjame revisar esa propuesta.', 'Entiendo. Un momento, por favor.', 'Estoy organizando esa información para ti.'],
+            'connectors' => [
+                'queue' => ['variants' => [
+                    'Claro, déjame organizar esa consulta.',
+                    'Entiendo. Estoy preparando la información demostrativa para ti.',
+                    'Dame un momento mientras ordeno los puntos que mencionaste.',
+                    'Voy a revisar esa propuesta demo antes de responderte.',
+                    'Gracias por la pregunta. Estoy reuniendo las respuestas correspondientes.',
+                    'Estoy organizando los temas para responderte con claridad.',
+                ]],
+                'multi_intro' => ['variants' => [
+                    'Veo que conectas varios asuntos importantes. Los revisemos con calma.',
+                    'Hay varias inquietudes en tu pregunta. Voy a responderlas una por una.',
+                    'Gracias por plantear estos temas juntos. Empecemos por el que mencionaste al inicio.',
+                    'Tu consulta reúne distintos frentes de la propuesta demo. Vamos punto por punto.',
+                    'Son preguntas relacionadas y vale la pena mirarlas con orden. Comencemos por el primer asunto.',
+                    'Tocas más de un eje de esta demostración. Te cuento cada parte de forma seguida.',
+                ]],
+                'multi_bridge' => ['variants' => [
+                    'Respecto al siguiente tema que mencionas, la propuesta demostrativa plantea lo siguiente.',
+                    'Pasemos ahora al otro asunto de tu consulta.',
+                    'Sobre el siguiente punto que señalaste, esta es la idea central.',
+                    'También preguntaste por otro eje. Te lo explico enseguida.',
+                    'Mirando la otra parte de tu pregunta, la demostración propone esto.',
+                    'Hay un segundo aspecto importante en lo que comentas. Vamos con él.',
+                ]],
+                'multi_outro' => ['variants' => [
+                    'Esos son los puntos principales de los temas que reuniste. Si quieres, puedo ampliar el último asunto.',
+                    'Así se conectan estos ejes dentro de la demostración. Dime si quieres profundizar en alguno.',
+                    'Con eso quedan cubiertos los temas que mencionaste. Podemos seguir con más detalle sobre el último.',
+                    'Esa es la vista general de tu consulta. Estoy lista para continuar desde el punto final.',
+                    'Hemos recorrido los asuntos que planteaste. Puedes pedirme ampliar el último cuando quieras.',
+                    'Hasta aquí la respuesta demostrativa a tus temas. Seguimos si deseas conocer más del último.',
+                ]],
+                'continue_last' => ['variants' => [
+                    'Claro, ampliemos el último tema que revisamos.',
+                    'Sigamos con el punto final de tu consulta anterior.',
+                    'Profundicemos un poco más en el último asunto que mencionaste.',
+                    'Retomemos el tema más reciente para ver su siguiente parte.',
+                    'Vamos a desarrollar la última propuesta que acabamos de revisar.',
+                    'Continúo con más detalle sobre el último eje conversado.',
+                ]],
+            ],
             'topics' => [
-                ['id' => 'agua', 'title' => 'Agua y saneamiento', 'keywords' => ['agua', 'saneamiento', 'desague', 'riego'], 'summary' => ['variants' => ['La propuesta ficticia plantea priorizar proyectos de agua segura y mantenimiento preventivo, con seguimiento público de cada obra.', 'En esta demostración, el eje de agua busca mejorar continuidad del servicio y publicar avances claros para las familias.']], 'detail' => ['variants' => ['La segunda parte propone un mapa regional de brechas, coordinación con municipalidades y metas trimestrales que cualquier persona pueda revisar.', 'También contempla priorizar zonas con mayor riesgo sanitario y capacitar comités locales para vigilar el mantenimiento.']], 'next' => ['variants' => ['Como siguiente paso, la propuesta ficticia abriría mesas vecinales para revisar avances, alertas y prioridades de inversión.', 'La tercera parte contempla reportes simples de presupuesto, cronograma y responsables por proyecto.']]],
-                ['id' => 'seguridad', 'title' => 'Seguridad ciudadana', 'keywords' => ['seguridad', 'delincuencia', 'serenazgo', 'policia'], 'summary' => ['variants' => ['La propuesta ficticia de seguridad prioriza prevención, coordinación territorial y datos abiertos sobre incidencias.', 'En esta demostración, seguridad significa trabajar con municipalidades, comunidad y autoridades para prevenir riesgos.']], 'detail' => ['variants' => ['La ampliación plantea mapas de puntos críticos, iluminación coordinada y campañas con jóvenes y organizaciones vecinales.', 'Otra medida sería publicar indicadores periódicos para que las decisiones se puedan evaluar con información verificable.']], 'next' => ['variants' => ['La tercera parte incluye reuniones de seguimiento por provincia y ajustes según los resultados observados.', 'Finalmente, el plan ficticio propone un canal ciudadano de alertas con trazabilidad de la atención.']]],
-                ['id' => 'empleo', 'title' => 'Empleo y emprendimiento', 'keywords' => ['empleo', 'trabajo', 'emprendimiento', 'negocio', 'jovenes'], 'summary' => ['variants' => ['La propuesta ficticia busca conectar capacitación, empleabilidad y pequeños emprendimientos con oportunidades regionales.', 'Este eje plantea dar información clara sobre capacitación y acompañamiento para emprendimientos locales.']], 'detail' => ['variants' => ['La segunda parte propone alianzas con institutos, empresas y municipios para acercar formación a cada provincia.', 'También contempla ferias transparentes de oportunidades y orientación básica para formalización de negocios.']], 'next' => ['variants' => ['Como tercera etapa, se medirían inserción laboral y continuidad de los negocios para corregir las acciones.', 'El cierre del eje plantea publicar resultados por provincia y recoger sugerencias de los participantes.']]],
-                ['id' => 'vias', 'title' => 'Vías y conectividad', 'keywords' => ['vias', 'carretera', 'camino', 'transporte', 'conectividad'], 'summary' => ['variants' => ['La propuesta ficticia prioriza mantenimiento vial con criterios públicos de seguridad, conectividad y acceso a servicios.', 'En esta demostración, vías significa ordenar prioridades con evidencia y comunicar el estado de cada intervención.']], 'detail' => ['variants' => ['La ampliación incluye inventario de puntos vulnerables, cronogramas visibles y coordinación con las provincias.', 'Otra medida es incluir alertas por temporada y canales para reportar daños de forma ordenada.']], 'next' => ['variants' => ['La tercera parte propone una evaluación trimestral de avances físicos y presupuestales.', 'Para cerrar, la propuesta ficticia incorpora supervisión ciudadana sobre plazos y calidad.']]],
-                ['id' => 'presupuesto', 'title' => 'Presupuesto y participación', 'keywords' => ['presupuesto', 'dinero', 'inversion', 'participacion', 'transparencia'], 'summary' => ['variants' => ['La propuesta ficticia plantea explicar el presupuesto regional en lenguaje sencillo y abrir espacios de priorización ciudadana.', 'Este eje busca que las personas conozcan qué se financia, por qué y cómo pueden hacer seguimiento.']], 'detail' => ['variants' => ['La segunda parte contempla tableros públicos, audiencias por provincia y un calendario visible de inversiones.', 'También propone publicar cambios presupuestales con una explicación breve y accesible.']], 'next' => ['variants' => ['Como siguiente parte, se incorporarían reportes ciudadanos sobre ejecución y calidad de los proyectos.', 'El cierre plantea evaluaciones públicas anuales para aprender y mejorar la siguiente priorización.']]],
+                $this->topic('agua', 'Agua y saneamiento', ['agua', 'saneamiento', 'desague', 'riego'], 'priorizar agua segura, mantenimiento preventivo y seguimiento público de cada obra', 'crear un mapa de brechas, coordinar con municipalidades y publicar metas trimestrales', 'abrir mesas vecinales para revisar avances, alertas y prioridades de inversión'),
+                $this->topic('seguridad', 'Seguridad ciudadana', ['seguridad', 'delincuencia', 'serenazgo', 'policia'], 'trabajar prevención, coordinación territorial y datos abiertos sobre incidencias', 'identificar puntos críticos, mejorar la iluminación y realizar campañas con organizaciones vecinales', 'convocar seguimientos por provincia y ajustar las acciones según resultados observables'),
+                $this->topic('empleo', 'Empleo y emprendimiento', ['empleo', 'trabajo', 'emprendimiento', 'negocio', 'jovenes'], 'conectar capacitación, empleabilidad y pequeños emprendimientos con oportunidades regionales', 'impulsar alianzas con institutos, empresas y municipios, además de ferias transparentes de oportunidades', 'medir inserción laboral, continuidad de negocios y publicar resultados por provincia'),
+                $this->topic('vias', 'Vías y conectividad', ['vias', 'carretera', 'camino', 'transporte', 'conectividad'], 'priorizar mantenimiento vial con criterios públicos de seguridad, conectividad y acceso a servicios', 'mantener un inventario de puntos vulnerables, cronogramas visibles y coordinación con provincias', 'evaluar avances físicos y presupuestales con supervisión ciudadana sobre plazos y calidad'),
+                $this->topic('presupuesto', 'Presupuesto y participación', ['presupuesto', 'dinero', 'inversion', 'participacion', 'transparencia'], 'explicar el presupuesto regional en lenguaje sencillo y abrir espacios de priorización ciudadana', 'usar tableros públicos, audiencias por provincia y un calendario visible de inversiones', 'incorporar reportes ciudadanos y evaluaciones públicas anuales para mejorar la siguiente priorización'),
             ],
         ];
 
         $version = $avatar->conversationVersions()->firstOrCreate(
             ['label' => 'Demo Gobierno Regional de Ica'],
-            ['tree' => $tree, 'status' => 'published', 'published_at' => now()],
+            ['tree' => $tree],
         );
 
-        foreach (app(ConversationTree::class)->lines($tree) as $key => $text) {
-            AudioAsset::firstOrCreate(['conversation_version_id' => $version->id, 'asset_key' => $key], ['text' => $text]);
+        $version->update(['tree' => $tree, 'status' => 'draft', 'published_at' => null]);
+        $lines = app(ConversationTree::class)->lines($tree);
+        $version->audioAssets()->whereNotIn('asset_key', array_keys($lines))->delete();
+
+        foreach ($lines as $key => $text) {
+            $version->audioAssets()->updateOrCreate(
+                ['asset_key' => $key],
+                [
+                    'text' => $text,
+                    'path' => null,
+                    'duration_ms' => null,
+                    'visemes' => null,
+                    'status' => 'pending',
+                    'error' => null,
+                ],
+            );
         }
+    }
+
+    /**
+     * @param  list<string>  $keywords
+     * @return array<string, mixed>
+     */
+    private function topic(string $id, string $title, array $keywords, string $summary, string $detail, string $next): array
+    {
+        return [
+            'id' => $id,
+            'title' => $title,
+            'keywords' => $keywords,
+            'summary' => ['variants' => $this->variants($title, $summary, 'eje principal')],
+            'detail' => ['variants' => $this->variants($title, $detail, 'desarrollo')],
+            'next' => ['variants' => $this->variants($title, $next, 'siguiente paso')],
+        ];
+    }
+
+    /** @return list<string> */
+    private function variants(string $title, string $message, string $moment): array
+    {
+        return [
+            "En esta demostración ficticia, {$title} busca {$message}.",
+            "Sobre {$title}, la propuesta demo plantea {$message}.",
+            "La idea central de {$title} en este ejemplo es {$message}.",
+            "Dentro de este {$moment}, {$title} propone {$message}.",
+            "Esta versión demostrativa entiende que {$title} debe {$message}.",
+            "Como parte de la propuesta ficticia, {$title} considera {$message}.",
+        ];
     }
 }

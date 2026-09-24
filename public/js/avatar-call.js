@@ -133,7 +133,7 @@
     };
 
     const playAudio = async (reply) => {
-        if (muted || !reply.audio_url || !Array.isArray(reply.visemes) || reply.visemes.length === 0) {
+        if (muted || !reply.audio_url) {
             return false;
         }
 
@@ -191,6 +191,16 @@
         }
     };
 
+    const playPlaylist = async (playlist) => {
+        for (const item of playlist) {
+            if (!(await playAudio(item))) {
+                return false;
+            }
+        }
+
+        return true;
+    };
+
     const setSpeaking = (speaking) => {
         shell.classList.toggle('is-speaking', speaking);
     };
@@ -205,7 +215,7 @@
             setMessage(data.message || 'Estoy organizando tu consulta.');
 
             if (data.connector) {
-                await playAudio(data.connector);
+                await playPlaylist([data.connector]);
             }
 
             return poll(data.ticket);
@@ -240,8 +250,11 @@
             const response = await reply({ message: transcript });
             addBubble('avatar', response.text);
             setMessage(response.text);
+            const playlist = Array.isArray(response.playlist) && response.playlist.length > 0
+                ? response.playlist
+                : [response];
 
-            if (!(await playAudio(response))) {
+            if (!(await playPlaylist(playlist))) {
                 setMessage('No se pudo reproducir la respuesta. Puedes reactivar el altavoz e intentarlo otra vez.');
             }
         } catch (_) {

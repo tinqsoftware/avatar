@@ -43,7 +43,7 @@ class ConversationRouterService
             return ['status' => 'queued', 'ticket' => $response->json('ticket')];
         }
 
-        return $this->validatedSelection($version->tree, $response->json(), $state);
+        return $this->validatedSelection($version->tree, $response->json());
     }
 
     /**
@@ -70,7 +70,7 @@ class ConversationRouterService
             return ['status' => 'queued'];
         }
 
-        return $this->validatedSelection($version->tree, $response->json(), $state);
+        return $this->validatedSelection($version->tree, $response->json());
     }
 
     /**
@@ -81,64 +81,87 @@ class ConversationRouterService
     private function localRoute(array $tree, string $transcript, array $state): array
     {
         $normalized = Str::ascii(Str::lower($transcript));
+        $matches = $this->matchedTopics($tree['topics'], $normalized);
         $isContinuation = Str::contains($normalized, ['mas', 'amplia', 'detalle', 'continua', 'sigue']);
-        if ($isContinuation && is_string($state['topic_id'] ?? null)) {
+
+        if ($matches !== []) {
             return [
                 'status' => 'ready',
-                'topic_id' => $state['topic_id'],
-                'stage' => match ($state['stage'] ?? 'summary') {
-                    'summary' => 'detail',
-                    default => 'next',
-                },
+                'items' => array_map(fn (array $topic): array => [
+                    'topic_id' => $topic['id'],
+                    'stage' => 'summary',
+                    'action' => $isContinuation ? 'continue' : 'select',
+                ], $matches),
             ];
         }
 
-        $bestTopic = null;
-        $bestScore = 0;
-        foreach ($tree['topics'] as $topic) {
-            $score = collect($topic['keywords'])
-                ->filter(fn (string $keyword): bool => Str::contains($normalized, Str::ascii(Str::lower($keyword))))
-                ->count();
-            if ($score > $bestScore) {
-                $bestTopic = $topic;
-                $bestScore = $score;
+        if ($isContinuation && is_string($state['last_topic_id'] ?? null)) {
+            return [
+                'status' => 'ready',
+                'items' => [[
+                    'topic_id' => $state['last_topic_id'],
+                    'stage' => 'detail',
+                    'action' => 'continue',
+                ]],
+            ];
+        }
+
+        return ['status' => 'fallback'];
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $topics
+     * @return list<array<string, mixed>>
+     */
+    private function matchedTopics(array $topics, string $normalized): array
+    {
+        $matches = [];
+        foreach ($topics as $topic) {
+            $positions = collect($topic['keywords'])
+                ->map(fn (string $keyword): int|false => mb_strpos($normalized, Str::ascii(Str::lower($keyword))))
+                ->filter(fn (int|false $position): bool => $position !== false);
+
+            if ($positions->isNotEmpty()) {
+                $matches[] = ['topic' => $topic, 'position' => $positions->min()];
             }
         }
 
-        if (! is_array($bestTopic)) {
-            return ['status' => 'fallback'];
-        }
+        usort($matches, fn (array $left, array $right): int => $left['position'] <=> $right['position']);
 
-        return ['status' => 'ready', 'topic_id' => $bestTopic['id'], 'stage' => 'summary'];
+        return array_map(fn (array $match): array => $match['topic'], array_slice($matches, 0, 3));
     }
 
     /**
      * @param  array<string, mixed>  $tree
-     * @param  array<string, mixed>  $state
      * @return array<string, mixed>
      */
-    private function validatedSelection(array $tree, mixed $payload, array $state): array
+    private function validatedSelection(array $tree, mixed $payload): array
     {
-        if (! is_array($payload) || ! is_string($payload['topic_id'] ?? null)) {
+        if (! is_array($payload) || ! is_array($payload['items'] ?? null) || $payload['items'] === []) {
             return ['status' => 'fallback'];
         }
 
-        $topic = collect($tree['topics'])->firstWhere('id', $payload['topic_id']);
-        if (! is_array($topic)) {
-            return ['status' => 'fallback'];
+        $allowed = collect($tree['topics'])->keyBy('id');
+        $items = [];
+        $seenTopicIds = [];
+        foreach (array_slice($payload['items'], 0, 3) as $item) {
+            if (! is_array($item) || ! is_string($item['topic_id'] ?? null) || ! $allowed->has($item['topic_id'])) {
+                return ['status' => 'fallback'];
+            }
+            if (isset($seenTopicIds[$item['topic_id']])) {
+                return ['status' => 'fallback'];
+            }
+
+            $stage = $item['stage'] ?? 'summary';
+            $action = $item['action'] ?? 'select';
+            if (! in_array($stage, ['summary', 'detail', 'next'], true) || ! in_array($action, ['select', 'continue'], true)) {
+                return ['status' => 'fallback'];
+            }
+
+            $items[] = ['topic_id' => $item['topic_id'], 'stage' => $stage, 'action' => $action];
+            $seenTopicIds[$item['topic_id']] = true;
         }
 
-        $stage = $payload['stage'] ?? 'summary';
-        if (! in_array($stage, ['summary', 'detail', 'next'], true)) {
-            return ['status' => 'fallback'];
-        }
-        if (($payload['action'] ?? null) === 'continue' && ($state['topic_id'] ?? null) === $topic['id']) {
-            $stage = match ($state['stage'] ?? 'summary') {
-                'summary' => 'detail',
-                default => 'next',
-            };
-        }
-
-        return ['status' => 'ready', 'topic_id' => $topic['id'], 'stage' => $stage];
+        return ['status' => 'ready', 'items' => $items];
     }
 }
