@@ -71,5 +71,15 @@ ROUTER_MODEL=Qwen/Qwen3-4B
 ```
 
 En el `.env` del VPS usar el mismo `ROUTER_TOKEN` en
-`AVATAR_ROUTER_TOKEN` y la URL pública del grupo en `AVATAR_ROUTER_URL`. El
-endpoint `/health` solo marca el contenedor listo cuando vLLM ya cargó Qwen.
+`AVATAR_ROUTER_TOKEN` y la URL pública del grupo en `AVATAR_ROUTER_URL`.
+
+Configurar las probes del Container Group así:
+
+- **Startup** y **Liveness**: `GET /live` en el puerto `8790`. Este endpoint
+  solo comprueba que Uvicorn sigue activo mientras vLLM carga Qwen.
+- **Readiness**: `GET /health` en el puerto `8790`. Este endpoint devuelve
+  `503` hasta que vLLM publica el modelo y solo entonces responde con
+  `models_loaded: true`.
+
+No usar `/health` para startup ni liveness: hacerlo reinicia el contenedor
+mientras el modelo todavía se está cargando.

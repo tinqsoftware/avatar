@@ -128,6 +128,12 @@ async def start_workers() -> None:
     asyncio.create_task(expire_results())
 
 
+@app.get("/live")
+async def live() -> dict[str, str]:
+    """Report that the router process is running, independently of model loading."""
+    return {"status": "ok"}
+
+
 @app.get("/health")
 async def health(response: Response) -> dict[str, Any]:
     ready = await model_is_ready()
