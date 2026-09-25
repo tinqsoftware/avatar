@@ -8,7 +8,9 @@ vllm serve "${ROUTER_MODEL:-Qwen/Qwen3-4B}" \
   --max-model-len "${ROUTER_MAX_MODEL_LEN:-4096}" &
 vllm_pid=$!
 
-uvicorn app:app --host 0.0.0.0 --port 8790 --no-access-log &
+# Salad's gateway and health probes reach containers over IPv6. Binding to the
+# IPv6 wildcard also accepts IPv4-mapped traffic on Linux's dual-stack socket.
+uvicorn app:app --host :: --port 8790 --no-access-log &
 api_pid=$!
 
 cleanup() {
