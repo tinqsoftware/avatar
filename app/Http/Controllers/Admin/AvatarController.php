@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreAvatarRequest;
 use App\Http\Requests\UpdateAvatarRequest;
 use App\Models\Avatar;
+use App\Services\VoiceSampleReference;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
@@ -34,7 +35,11 @@ class AvatarController extends Controller
     {
         $avatar = Avatar::create($this->attributes($request));
 
-        return redirect()->route('admin.avatars.show', $avatar)->with('success', 'Avatar creado. Ahora sube y publica su árbol conversacional.');
+        $message = config('avatar.audio_role') === 'studio'
+            ? 'Avatar creado. Continúa en el Estudio de audio para cargar el JSON y generar localmente.'
+            : 'Avatar creado. Ya puede recibir paquetes de audio desde el Estudio local.';
+
+        return redirect()->route('admin.avatars.show', $avatar)->with('success', $message);
     }
 
     /**
@@ -80,27 +85,33 @@ class AvatarController extends Controller
      */
     private function attributes(StoreAvatarRequest|UpdateAvatarRequest $request, ?Avatar $avatar = null): array
     {
-        $attributes = $request->safe()->except(['rive', 'voice_sample', 'background', 'status']);
+        $attributes = $request->safe()->except(['rive', 'background', 'status']);
         $attributes['status'] = $avatar?->status ?? 'draft';
+
+        if (config('avatar.audio_role') !== 'studio') {
+            $attributes['voice_mode'] = $avatar?->voice_mode ?? 'synthetic';
+            $attributes['voice_profile'] = $avatar?->voice_profile ?? 'anita';
+            $attributes['voice_locale'] = $avatar?->voice_locale ?? 'es-PE';
+
+            return $this->storePublicFiles($request, $avatar, $attributes);
+        }
 
         if ($attributes['voice_mode'] === 'cloned') {
             $attributes['voice_profile'] = 'cloned';
-
-            if ($request->hasFile('voice_sample')) {
-                if ($avatar?->voice_sample_path) {
-                    Storage::disk('local')->delete($avatar->voice_sample_path);
-                }
-
-                $attributes['voice_sample_path'] = $request->file('voice_sample')->store("avatars/{$request->string('slug')}/voice-samples", 'local');
-            }
         } else {
-            if ($avatar?->voice_sample_path) {
-                Storage::disk('local')->delete($avatar->voice_sample_path);
-            }
-
+            app(VoiceSampleReference::class)->clear($avatar);
             $attributes['voice_sample_path'] = null;
         }
 
+        return $this->storePublicFiles($request, $avatar, $attributes);
+    }
+
+    /**
+     * @param  array<string, mixed>  $attributes
+     * @return array<string, mixed>
+     */
+    private function storePublicFiles(StoreAvatarRequest|UpdateAvatarRequest $request, ?Avatar $avatar, array $attributes): array
+    {
         if ($request->hasFile('rive')) {
             $file = $request->file('rive');
             if (! str_starts_with($file->get(), 'RIVE')) {

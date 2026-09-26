@@ -13,13 +13,14 @@ class ConversationVersion extends Model
     /** @use HasFactory<ConversationVersionFactory> */
     use HasFactory;
 
-    protected $fillable = ['avatar_id', 'label', 'tree', 'status', 'published_at'];
+    protected $fillable = ['avatar_id', 'label', 'tree', 'status', 'published_at', 'preview_approved_at'];
 
     protected function casts(): array
     {
         return [
             'tree' => 'array',
             'published_at' => 'datetime',
+            'preview_approved_at' => 'datetime',
         ];
     }
 

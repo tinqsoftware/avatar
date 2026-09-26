@@ -54,6 +54,12 @@ class GenerateStaticAudio implements ShouldBeUnique, ShouldQueue
                     return;
                 }
 
+                if (config('avatar.audio_role') === 'studio') {
+                    $lockedVersion->update(['status' => 'ready_to_upload', 'published_at' => null]);
+
+                    return;
+                }
+
                 $lockedVersion->avatar->conversationVersions()
                     ->where('status', 'published')
                     ->whereKeyNot($lockedVersion->id)

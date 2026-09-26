@@ -20,9 +20,11 @@ class AvatarFactory extends Factory
         return [
             'name' => fake()->name(),
             'slug' => fake()->unique()->slug(2),
+            'delivery_slug' => null,
             'public_title' => fake()->sentence(3),
             'voice_mode' => 'synthetic',
             'voice_profile' => 'anita',
+            'voice_locale' => 'es-PE',
             'voice_sample_path' => null,
             'rive_path' => 'assets/avatar/anita.riv',
             'status' => 'draft',

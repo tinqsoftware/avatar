@@ -15,9 +15,11 @@ class Avatar extends Model
     protected $fillable = [
         'name',
         'slug',
+        'delivery_slug',
         'public_title',
         'voice_mode',
         'voice_profile',
+        'voice_locale',
         'voice_sample_path',
         'rive_path',
         'background_path',
@@ -32,6 +34,11 @@ class Avatar extends Model
     public function conversationVersions(): HasMany
     {
         return $this->hasMany(ConversationVersion::class);
+    }
+
+    public function voiceSamples(): HasMany
+    {
+        return $this->hasMany(AvatarVoiceSample::class);
     }
 
     public function publishedConversation(): ?ConversationVersion

@@ -22,6 +22,7 @@ class StaticAudioPublisherTest extends TestCase
             'avatar.voicebox_enabled' => true,
             'avatar.voicebox_url' => 'https://voice.test',
             'avatar.voicebox_token' => 'test-token',
+            'avatar.audio_role' => 'studio',
         ]);
         Http::preventStrayRequests();
         Http::fake(['https://voice.test/health' => Http::response(['models_loaded' => true])]);
@@ -35,6 +36,7 @@ class StaticAudioPublisherTest extends TestCase
             'avatar.voicebox_enabled' => true,
             'avatar.voicebox_url' => 'https://voice.test',
             'avatar.voicebox_token' => 'test-token',
+            'avatar.audio_role' => 'studio',
         ]);
         Http::preventStrayRequests();
         Http::fake(['https://voice.test/health' => Http::response(['models_loaded' => false])]);
@@ -48,8 +50,12 @@ class StaticAudioPublisherTest extends TestCase
             'avatar.voicebox_enabled' => true,
             'avatar.voicebox_url' => 'https://voice.test',
             'avatar.voicebox_token' => 'test-token',
+            'avatar.audio_role' => 'studio',
         ]);
         Storage::fake('public');
+        Storage::fake('local');
+        Storage::disk('local')->put('voice-references/anita.wav', 'anita-reference');
+        config(['avatar.voicebox_synthetic_reference_path' => Storage::disk('local')->path('voice-references/anita.wav')]);
         $avatar = Avatar::factory()->create(['slug' => 'ica-demo']);
         $version = ConversationVersion::factory()->create(['avatar_id' => $avatar->id]);
         $asset = AudioAsset::factory()->create([
@@ -58,7 +64,7 @@ class StaticAudioPublisherTest extends TestCase
             'text' => 'Hola Ica.',
         ]);
         Http::preventStrayRequests();
-        Http::fake(['https://voice.test/v1/anita/speech' => Http::response([
+        Http::fake(['https://voice.test/v1/cloned/speech' => Http::response([
             'audio_base64' => base64_encode('demo-mp3'),
             'duration_ms' => 1000,
             'words' => [['text' => 'Hola', 'start_ms' => 0, 'end_ms' => 500]],
@@ -72,9 +78,10 @@ class StaticAudioPublisherTest extends TestCase
         $this->assertNotEmpty($asset->visemes);
         Storage::disk('public')->assertExists($asset->path);
         Http::assertSent(function (Request $request): bool {
-            return $request->url() === 'https://voice.test/v1/anita/speech'
+            return $request->url() === 'https://voice.test/v1/cloned/speech'
                 && $request->header('Authorization')[0] === 'Bearer test-token'
-                && $request['input'] === 'Hola Ica.';
+                && str_contains($request->body(), 'Hola Ica.')
+                && str_contains($request->body(), 'anita-reference');
         });
     }
 
@@ -84,6 +91,7 @@ class StaticAudioPublisherTest extends TestCase
             'avatar.voicebox_enabled' => true,
             'avatar.voicebox_url' => 'https://voice.test',
             'avatar.voicebox_token' => 'test-token',
+            'avatar.audio_role' => 'studio',
         ]);
         Storage::fake('public');
         Storage::fake('local');

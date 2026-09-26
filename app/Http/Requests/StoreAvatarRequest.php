@@ -22,13 +22,15 @@ class StoreAvatarRequest extends FormRequest
      */
     public function rules(): array
     {
+        $studio = config('avatar.audio_role') === 'studio';
+
         return [
             'name' => ['required', 'string', 'max:100'],
             'slug' => ['required', 'string', 'regex:/^[a-z0-9-]{2,80}$/', 'unique:avatars,slug'],
             'public_title' => ['required', 'string', 'max:150'],
-            'voice_mode' => ['required', Rule::in(['synthetic', 'cloned'])],
-            'voice_profile' => ['nullable', 'string', 'max:100', Rule::requiredIf($this->input('voice_mode') === 'synthetic'), Rule::in(['anita'])],
-            'voice_sample' => ['nullable', 'file', 'mimetypes:audio/mpeg,audio/wav,audio/x-wav,audio/mp4,audio/x-m4a', 'max:25600', Rule::requiredIf($this->input('voice_mode') === 'cloned')],
+            'voice_mode' => [$studio ? 'required' : 'nullable', Rule::in(['synthetic', 'cloned'])],
+            'voice_profile' => ['nullable', 'string', 'max:100', Rule::requiredIf($studio && $this->input('voice_mode') === 'synthetic'), Rule::in(['anita'])],
+            'voice_locale' => ['nullable', Rule::in(['es-PE'])],
             'rive' => ['nullable', 'file', 'extensions:riv', 'max:20480'],
             'background' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:10240', 'dimensions:max_width=4096,max_height=4096'],
         ];

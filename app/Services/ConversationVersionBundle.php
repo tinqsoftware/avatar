@@ -18,7 +18,7 @@ class ConversationVersionBundle
 
     public function __construct(private readonly ConversationTree $conversationTree) {}
 
-    public function export(ConversationVersion $version, string $archivePath): void
+    public function export(ConversationVersion $version, string $archivePath, ?string $deliverySlug = null): void
     {
         $version->loadMissing(['avatar', 'audioAssets']);
         $this->assertExportable($version);
@@ -56,7 +56,10 @@ class ConversationVersionBundle
 
             $manifest = [
                 'schema_version' => self::SCHEMA_VERSION,
-                'avatar' => ['slug' => $version->avatar->slug],
+                'avatar' => [
+                    'slug' => $deliverySlug ?? $version->avatar->slug,
+                    'source_slug' => $version->avatar->slug,
+                ],
                 'conversation_version' => [
                     'label' => $version->label,
                     'tree' => $version->tree,

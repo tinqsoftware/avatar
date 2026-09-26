@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\AudioAsset;
+use App\Models\Avatar;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
@@ -15,11 +16,14 @@ class StaticAudioPublisher
 
     private const MAX_AUDIO_DURATION_MS = 60_000;
 
-    public function __construct(private readonly VisemeTimeline $visemeTimeline) {}
+    public function __construct(
+        private readonly VisemeTimeline $visemeTimeline,
+        private readonly VoiceSampleReference $voiceSampleReference,
+    ) {}
 
     public function isHealthy(): bool
     {
-        if (! config('avatar.voicebox_enabled') || ! config('avatar.voicebox_url') || ! config('avatar.voicebox_token')) {
+        if (config('avatar.audio_role') !== 'studio' || ! config('avatar.voicebox_enabled') || ! config('avatar.voicebox_url') || ! config('avatar.voicebox_token')) {
             return false;
         }
 
@@ -36,27 +40,19 @@ class StaticAudioPublisher
 
     public function publish(AudioAsset $asset): void
     {
-        if (! config('avatar.voicebox_enabled') || ! config('avatar.voicebox_url') || ! config('avatar.voicebox_token')) {
-            throw new RuntimeException('La voz de Salad no está configurada para publicar los audios.');
+        if (config('avatar.audio_role') !== 'studio' || ! config('avatar.voicebox_enabled') || ! config('avatar.voicebox_url') || ! config('avatar.voicebox_token')) {
+            throw new RuntimeException('La voz local no está configurada para publicar los audios.');
         }
 
         try {
-            $response = $this->requestSpeech($asset);
+            $speech = $this->synthesize($asset->conversationVersion->avatar, $asset->text, $asset->id);
         } catch (Throwable $exception) {
             throw new RuntimeException('No se pudo contactar la voz de Salad.', previous: $exception);
         }
 
-        $audio = $response->json('audio_base64');
-        $duration = $response->json('duration_ms');
-        $words = $response->json('words');
-        if (! $response->successful() || ! is_string($audio) || ! is_int($duration) || ! is_array($words)) {
-            throw new RuntimeException('Salad no devolvió un audio publicable.');
-        }
-
-        $bytes = base64_decode($audio, true);
-        if ($bytes === false || strlen($bytes) > self::MAX_AUDIO_BYTES || $duration < 1 || $duration > self::MAX_AUDIO_DURATION_MS) {
-            throw new RuntimeException('Salad devolvió un audio inválido.');
-        }
+        $bytes = $speech['bytes'];
+        $duration = $speech['duration_ms'];
+        $words = $speech['words'];
 
         $path = sprintf(
             'avatars/%s/versions/%d/%s.mp3',
@@ -75,33 +71,57 @@ class StaticAudioPublisher
         ]);
     }
 
-    private function requestSpeech(AudioAsset $asset): Response
+    /** @return array{bytes: string, duration_ms: int, words: array<int, array<string, mixed>>} */
+    public function synthesize(Avatar $avatar, string $text, ?int $assetId = null): array
     {
-        $avatar = $asset->conversationVersion->avatar;
         $request = Http::acceptJson()
             ->connectTimeout(5)
             ->timeout(config('avatar.voicebox_timeout_seconds'))
-            ->withToken(config('avatar.voicebox_token'))
-            ->withHeaders(['Idempotency-Key' => "audio-{$asset->id}"]);
+            ->withToken(config('avatar.voicebox_token'));
 
-        if (! $avatar->usesClonedVoice()) {
-            return $request->post(config('avatar.voicebox_url').config('avatar.voicebox_synthetic_speech_path'), [
-                'input' => $asset->text,
-                'voice' => $avatar->voice_profile,
-                'response_format' => 'mp3',
-            ]);
+        if ($assetId) {
+            $request = $request->withHeaders(['Idempotency-Key' => "audio-{$assetId}"]);
         }
 
-        if (! $avatar->voice_sample_path || ! Storage::disk('local')->exists($avatar->voice_sample_path)) {
-            throw new RuntimeException('Este avatar no tiene una muestra privada de voz disponible.');
+        $referencePath = $avatar->usesClonedVoice()
+            ? $this->voiceSampleReference->pathFor($avatar)
+            : config('avatar.voicebox_synthetic_reference_path');
+        if (! is_string($referencePath) || ! is_file($referencePath)) {
+            throw new RuntimeException('Falta la referencia local de la voz sintética Anita.');
+        }
+        $sample = file_get_contents($referencePath);
+        if (! is_string($sample)) {
+            throw new RuntimeException('No se pudo leer la referencia de voz local.');
         }
 
-        return $request
-            ->attach('voice_sample', Storage::disk('local')->get($avatar->voice_sample_path), basename($avatar->voice_sample_path))
+        $response = $request
+            ->attach('voice_sample', $sample, 'reference.wav')
             ->post(config('avatar.voicebox_url').config('avatar.voicebox_clone_speech_path'), [
-                'input' => $asset->text,
-                'voice_mode' => 'cloned',
+                'input' => $text,
+                'voice_mode' => $avatar->usesClonedVoice() ? 'cloned' : 'synthetic',
                 'response_format' => 'mp3',
+                'language' => 'es',
+                'locale' => $avatar->voice_locale,
             ]);
+
+        return $this->responsePayload($response);
+    }
+
+    /** @return array{bytes: string, duration_ms: int, words: array<int, array<string, mixed>>} */
+    private function responsePayload(Response $response): array
+    {
+        $audio = $response->json('audio_base64');
+        $duration = $response->json('duration_ms');
+        $words = $response->json('words');
+        if (! $response->successful() || ! is_string($audio) || ! is_int($duration) || ! is_array($words)) {
+            throw new RuntimeException('Voicebox no devolvió un audio publicable.');
+        }
+
+        $bytes = base64_decode($audio, true);
+        if ($bytes === false || strlen($bytes) > self::MAX_AUDIO_BYTES || $duration < 1 || $duration > self::MAX_AUDIO_DURATION_MS) {
+            throw new RuntimeException('Voicebox devolvió un audio inválido.');
+        }
+
+        return ['bytes' => $bytes, 'duration_ms' => $duration, 'words' => $words];
     }
 }

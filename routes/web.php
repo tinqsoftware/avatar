@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AudioStudioController;
 use App\Http\Controllers\Admin\AvatarController;
 use App\Http\Controllers\Admin\ConversationVersionController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
@@ -26,6 +27,12 @@ Route::prefix('admin')->name('admin.')->group(function (): void {
     Route::middleware(['auth', 'admin'])->group(function (): void {
         Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
         Route::resource('avatars', AvatarController::class);
+        Route::get('avatars/{avatar}/audio-studio', [AudioStudioController::class, 'show'])->name('audio-studio.show');
+        Route::post('avatars/{avatar}/audio-studio/samples', [AudioStudioController::class, 'storeSamples'])->name('audio-studio.samples.store');
+        Route::post('avatars/{avatar}/audio-studio/destination', [AudioStudioController::class, 'destination'])->name('audio-studio.destination');
+        Route::get('avatars/{avatar}/versions/{version}/audio-preview', [AudioStudioController::class, 'preview'])->name('audio-studio.preview');
+        Route::post('avatars/{avatar}/versions/{version}/approve-preview', [AudioStudioController::class, 'approve'])->name('audio-studio.approve');
+        Route::post('avatars/{avatar}/versions/{version}/upload', [AudioStudioController::class, 'upload'])->name('audio-studio.upload');
         Route::get('avatars/{avatar}/versions/create', [ConversationVersionController::class, 'create'])->name('versions.create');
         Route::post('avatars/{avatar}/versions', [ConversationVersionController::class, 'store'])->name('versions.store');
         Route::get('avatars/{avatar}/versions/{version}', [ConversationVersionController::class, 'show'])->name('versions.show');
