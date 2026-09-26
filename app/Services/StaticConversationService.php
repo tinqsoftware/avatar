@@ -17,7 +17,10 @@ class StaticConversationService
     {
         $version = $this->version($avatar);
         $state = $this->state($avatar);
-        $reply = $this->line($avatar, $version, 'greeting', null, null, $state);
+        $reply = array_key_exists('greeting', $this->conversationTree->socialFamilies($version->tree))
+            ? $this->line($avatar, $version, 'social', 'greeting', null, $state)
+            : $this->line($avatar, $version, 'greeting', null, null, $state);
+        $state['closed'] = false;
         $this->storeState($avatar, $state);
 
         return $reply;
@@ -76,9 +79,10 @@ class StaticConversationService
         }
 
         $topics = collect($version->tree['topics'])->keyBy('id');
+        $social = $this->conversationTree->socialFamilies($version->tree);
         $items = collect($selection['items'])
-            ->take(3)
-            ->filter(fn (mixed $item): bool => is_array($item) && is_string($item['topic_id'] ?? null) && $topics->has($item['topic_id']))
+            ->take(4)
+            ->filter(fn (mixed $item): bool => $this->isValidItem($item, $topics->all(), $social))
             ->values();
 
         if ($items->isEmpty()) {
@@ -88,32 +92,46 @@ class StaticConversationService
             return $reply;
         }
 
+        $socialItems = $items->filter(fn (array $item): bool => ($item['kind'] ?? 'topic') === 'social');
+        $topicItems = $items->filter(fn (array $item): bool => ($item['kind'] ?? 'topic') === 'topic')->values();
+        if ($socialItems->contains(fn (array $item): bool => $item['intent'] === 'farewell')) {
+            $topicItems = collect();
+            $state['closed'] = true;
+        }
+
         $playlist = [];
-        if ($items->count() > 1) {
+        foreach ($socialItems as $item) {
+            $playlist[] = $this->line($avatar, $version, 'social', $item['intent'], null, $state);
+        }
+
+        if ($topicItems->count() > 1) {
             $playlist[] = $this->line($avatar, $version, 'connector', 'multi_intro', null, $state);
         }
 
-        foreach ($items as $index => $item) {
+        foreach ($topicItems as $index => $item) {
             $topic = $topics->get($item['topic_id']);
             $stage = $this->stageFor($item, $state);
-            if (($item['action'] ?? 'select') === 'continue' && $items->count() === 1) {
+            if (($item['action'] ?? 'select') === 'continue' && $topicItems->count() === 1) {
                 $playlist[] = $this->line($avatar, $version, 'connector', 'continue_last', null, $state);
             }
 
             $playlist[] = $this->line($avatar, $version, 'topic', $topic['id'], $stage, $state);
             $state['topics'][$topic['id']] = ['stage' => $stage];
 
-            if ($index < $items->count() - 1) {
+            if ($index < $topicItems->count() - 1) {
                 $playlist[] = $this->line($avatar, $version, 'connector', 'multi_bridge', null, $state);
             }
         }
 
-        if ($items->count() > 1) {
+        if ($topicItems->count() > 1) {
             $playlist[] = $this->line($avatar, $version, 'connector', 'multi_outro', null, $state);
         }
 
-        $state['last_topic_id'] = $items->last()['topic_id'];
-        $state['last_topic_ids'] = $items->pluck('topic_id')->all();
+        if ($topicItems->isNotEmpty()) {
+            $state['last_topic_id'] = $topicItems->last()['topic_id'];
+            $state['last_topic_ids'] = $topicItems->pluck('topic_id')->all();
+            $state['closed'] = false;
+        }
         $this->storeState($avatar, $state);
 
         return [
@@ -132,6 +150,10 @@ class StaticConversationService
         $stage = $item['stage'] ?? 'summary';
         if (! in_array($stage, ['summary', 'detail', 'next'], true)) {
             $stage = 'summary';
+        }
+
+        if (($item['action'] ?? 'select') === 'rephrase') {
+            return $state['topics'][$item['topic_id']]['stage'] ?? 'summary';
         }
 
         if (($item['action'] ?? 'select') !== 'continue') {
@@ -156,6 +178,9 @@ class StaticConversationService
         } elseif ($kind === 'connector') {
             $variants = $this->conversationTree->connectorFamilies($version->tree)[$topicId];
             $prefix = "connector.{$topicId}";
+        } elseif ($kind === 'social') {
+            $variants = $this->conversationTree->socialFamilies($version->tree)[$topicId]['variants'];
+            $prefix = "social.{$topicId}";
         } else {
             $variants = $version->tree[$kind]['variants'];
             $prefix = $kind;
@@ -201,5 +226,26 @@ class StaticConversationService
     private function stateKey(Avatar $avatar): string
     {
         return "avatar-call.{$avatar->id}";
+    }
+
+    /**
+     * @param  array<string, mixed>  $item
+     * @param  array<string, mixed>  $topics
+     * @param  array<string, array{description: string, examples: list<string>, keywords: list<string>, variants: list<string>}>  $social
+     */
+    private function isValidItem(mixed $item, array $topics, array $social): bool
+    {
+        if (! is_array($item)) {
+            return false;
+        }
+
+        if (($item['kind'] ?? 'topic') === 'social') {
+            return is_string($item['intent'] ?? null) && array_key_exists($item['intent'], $social);
+        }
+
+        return is_string($item['topic_id'] ?? null)
+            && array_key_exists($item['topic_id'], $topics)
+            && in_array($item['stage'] ?? 'summary', ['summary', 'detail', 'next'], true)
+            && in_array($item['action'] ?? 'select', ['select', 'continue', 'rephrase'], true);
     }
 }

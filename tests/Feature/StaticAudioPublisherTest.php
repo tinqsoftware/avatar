@@ -77,4 +77,43 @@ class StaticAudioPublisherTest extends TestCase
                 && $request['input'] === 'Hola Ica.';
         });
     }
+
+    public function test_sends_only_the_avatar_private_sample_to_the_cloned_voice_endpoint(): void
+    {
+        config([
+            'avatar.voicebox_enabled' => true,
+            'avatar.voicebox_url' => 'https://voice.test',
+            'avatar.voicebox_token' => 'test-token',
+        ]);
+        Storage::fake('public');
+        Storage::fake('local');
+        Storage::disk('local')->put('avatars/sofia/voice-samples/private.mp3', 'private-sample');
+        $avatar = Avatar::factory()->create([
+            'slug' => 'sofia',
+            'voice_mode' => 'cloned',
+            'voice_profile' => 'cloned',
+            'voice_sample_path' => 'avatars/sofia/voice-samples/private.mp3',
+        ]);
+        $version = ConversationVersion::factory()->create(['avatar_id' => $avatar->id]);
+        $asset = AudioAsset::factory()->create([
+            'conversation_version_id' => $version->id,
+            'asset_key' => 'greeting.0',
+            'text' => 'Hola Sofía.',
+        ]);
+        Http::preventStrayRequests();
+        Http::fake(['https://voice.test/v1/cloned/speech' => Http::response([
+            'audio_base64' => base64_encode('demo-mp3'),
+            'duration_ms' => 1000,
+            'words' => [['text' => 'Hola', 'start_ms' => 0, 'end_ms' => 500]],
+        ])]);
+
+        app(StaticAudioPublisher::class)->publish($asset->fresh(['conversationVersion.avatar']));
+
+        $asset->refresh();
+        $this->assertSame('ready', $asset->status);
+        Http::assertSent(fn (Request $request): bool => $request->url() === 'https://voice.test/v1/cloned/speech'
+            && $request->header('Idempotency-Key')[0] === "audio-{$asset->id}"
+            && str_contains($request->body(), 'voice_sample')
+            && str_contains($request->body(), 'private-sample'));
+    }
 }

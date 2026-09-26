@@ -25,6 +25,15 @@ tickets: dict[str, dict[str, Any]] = {}
 class Topic(BaseModel):
     id: str = Field(pattern=r"^[a-z0-9-]{2,80}$")
     title: str = Field(max_length=150)
+    description: str = Field(max_length=500)
+    examples: list[str] = Field(min_length=1, max_length=12)
+    keywords: list[str] = Field(min_length=1, max_length=25)
+
+
+class SocialIntent(BaseModel):
+    id: str = Field(pattern=r"^[a-z0-9-]{2,80}$")
+    description: str = Field(max_length=500)
+    examples: list[str] = Field(min_length=1, max_length=12)
     keywords: list[str] = Field(min_length=1, max_length=25)
 
 
@@ -33,6 +42,7 @@ class RouteRequest(BaseModel):
     transcript: str = Field(min_length=1, max_length=750)
     state: dict[str, Any] = Field(default_factory=dict)
     topics: list[Topic] = Field(min_length=1, max_length=100)
+    social: list[SocialIntent] = Field(default_factory=list, max_length=30)
 
 
 def require_token(router_token: str | None) -> None:
@@ -41,8 +51,9 @@ def require_token(router_token: str | None) -> None:
 
 
 def prompt(payload: RouteRequest) -> str:
-    candidates = [{"id": topic.id, "title": topic.title, "keywords": topic.keywords} for topic in payload.topics]
-    return """Eres un enrutador, no un redactor. Elige entre uno y tres temas permitidos, conservando el orden en que la persona los menciona. No inventes datos ni devuelvas explicaciones. Si pide continuar sin nombrar un tema, usa solamente el último tema del estado con action continue. Para temas nuevos usa action select. Si ningún tema encaja, responde {\"items\": []}. Responde solamente JSON con {\"items\":[{\"topic_id\":\"...\",\"stage\":\"summary|detail|next\",\"action\":\"select|continue\"}]}.\n\n""" + json.dumps({"transcript": payload.transcript, "state": payload.state, "topics": candidates}, ensure_ascii=False)
+    candidates = [{"id": topic.id, "title": topic.title, "description": topic.description, "examples": topic.examples, "keywords": topic.keywords} for topic in payload.topics]
+    social = [{"id": intent.id, "description": intent.description, "examples": intent.examples, "keywords": intent.keywords} for intent in payload.social]
+    return """Eres un enrutador, no un redactor. Interpreta la intención usando solamente los temas e intenciones sociales permitidos. No inventes datos, texto, explicaciones ni nuevas categorías. Puedes elegir una intención social y entre uno y tres temas, en el orden mencionado. Una intención social se representa como {\"kind\":\"social\",\"intent\":\"...\"}. Un tema se representa como {\"kind\":\"topic\",\"topic_id\":\"...\",\"stage\":\"summary|detail|next\",\"action\":\"select|continue|rephrase\"}. Si pide continuar sin nombrar tema, usa solamente el último tema del estado con action continue. Para explicar de otra forma el último tema, usa action rephrase. Si ningún elemento encaja, responde {\"items\": []}. Responde solamente JSON.\n\n""" + json.dumps({"transcript": payload.transcript, "state": payload.state, "topics": candidates, "social": social}, ensure_ascii=False)
 
 
 async def worker() -> None:
@@ -67,30 +78,38 @@ async def worker() -> None:
                 response.raise_for_status()
                 raw = response.json()["choices"][0]["message"]["content"]
                 selected = json.loads(raw)
-                allowed = {topic.id for topic in payload.topics}
+                allowed_topics = {topic.id for topic in payload.topics}
+                allowed_social = {intent.id for intent in payload.social}
                 items = selected.get("items")
-                if not isinstance(items, list) or not items or len(items) > 3:
+                if not isinstance(items, list) or not items or len(items) > 4:
                     item["result"] = {"status": "fallback"}
-                elif all(
-                    isinstance(selected_item, dict)
-                    and selected_item.get("topic_id") in allowed
-                    and selected_item.get("stage") in {"summary", "detail", "next"}
-                    and selected_item.get("action", "select") in {"select", "continue"}
-                    for selected_item in items
-                ) and len({selected_item["topic_id"] for selected_item in items}) == len(items):
-                    item["result"] = {
-                        "status": "ready",
-                        "items": [
-                            {
-                                "topic_id": selected_item["topic_id"],
-                                "stage": selected_item["stage"],
-                                "action": selected_item.get("action", "select"),
-                            }
-                            for selected_item in items
-                        ],
-                    }
                 else:
-                    item["result"] = {"status": "fallback"}
+                    normalized_items: list[dict[str, str]] = []
+                    topic_ids: set[str] = set()
+                    social_count = 0
+                    for selected_item in items:
+                        if not isinstance(selected_item, dict):
+                            normalized_items = []
+                            break
+                        if selected_item.get("kind") == "social":
+                            intent = selected_item.get("intent")
+                            if intent not in allowed_social or social_count >= 1:
+                                normalized_items = []
+                                break
+                            normalized_items.append({"kind": "social", "intent": intent})
+                            social_count += 1
+                            continue
+
+                        topic_id = selected_item.get("topic_id")
+                        stage = selected_item.get("stage")
+                        action = selected_item.get("action", "select")
+                        if selected_item.get("kind", "topic") != "topic" or topic_id not in allowed_topics or topic_id in topic_ids or stage not in {"summary", "detail", "next"} or action not in {"select", "continue", "rephrase"}:
+                            normalized_items = []
+                            break
+                        normalized_items.append({"kind": "topic", "topic_id": topic_id, "stage": stage, "action": action})
+                        topic_ids.add(topic_id)
+
+                    item["result"] = {"status": "ready", "items": normalized_items} if normalized_items else {"status": "fallback"}
             except (httpx.HTTPError, KeyError, TypeError, ValueError, json.JSONDecodeError):
                 item["result"] = {"status": "fallback"}
             finally:

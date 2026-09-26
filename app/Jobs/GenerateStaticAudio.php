@@ -4,17 +4,26 @@ namespace App\Jobs;
 
 use App\Models\AudioAsset;
 use App\Services\StaticAudioPublisher;
+use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Support\Facades\DB;
 use Throwable;
 
-class GenerateStaticAudio implements ShouldQueue
+class GenerateStaticAudio implements ShouldBeUnique, ShouldQueue
 {
     use Queueable;
 
     public int $tries = 2;
 
+    public int $uniqueFor = 3600;
+
     public function __construct(public readonly int $audioAssetId) {}
+
+    public function uniqueId(): string
+    {
+        return (string) $this->audioAssetId;
+    }
 
     /**
      * Execute the job.
@@ -39,11 +48,24 @@ class GenerateStaticAudio implements ShouldQueue
 
         $version = $asset->fresh()->conversationVersion;
         if ($version->audioAssets()->where('status', '!=', 'ready')->doesntExist()) {
-            $version->update(['status' => 'published', 'published_at' => now()]);
-            $version->avatar->update(['status' => 'published']);
+            DB::transaction(function () use ($version): void {
+                $lockedVersion = $version->newQuery()->with('avatar')->lockForUpdate()->findOrFail($version->id);
+                if ($lockedVersion->audioAssets()->where('status', '!=', 'ready')->exists()) {
+                    return;
+                }
+
+                $lockedVersion->avatar->conversationVersions()
+                    ->where('status', 'published')
+                    ->whereKeyNot($lockedVersion->id)
+                    ->update(['status' => 'archived']);
+                $lockedVersion->update(['status' => 'published', 'published_at' => now()]);
+                $lockedVersion->avatar->update(['status' => 'published']);
+            }, attempts: 3);
         } elseif ($version->audioAssets()->whereIn('status', ['pending', 'generating'])->doesntExist()) {
             $version->update(['status' => 'draft', 'published_at' => null]);
-            $version->avatar->update(['status' => 'draft']);
+            if (! $version->avatar->publishedConversation()) {
+                $version->avatar->update(['status' => 'draft']);
+            }
         }
     }
 }

@@ -54,14 +54,18 @@ class QueueStaticAudio extends Command
 
         if (! $publisher->isHealthy()) {
             $version->update(['status' => 'draft', 'published_at' => null]);
-            $avatar->update(['status' => 'draft']);
+            if (! $avatar->publishedConversation()) {
+                $avatar->update(['status' => 'draft']);
+            }
             $this->error('La voz de Salad no está lista. No se encoló ningún audio.');
 
             return self::FAILURE;
         }
 
         $version->update(['status' => 'generating', 'published_at' => null]);
-        $avatar->update(['status' => 'generating']);
+        if (! $avatar->publishedConversation()) {
+            $avatar->update(['status' => 'generating']);
+        }
 
         $assets->each(fn ($asset) => GenerateStaticAudio::dispatch($asset->id));
 

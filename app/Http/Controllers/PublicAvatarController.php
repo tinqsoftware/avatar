@@ -6,6 +6,7 @@ use App\Models\Avatar;
 use App\Services\StaticConversationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
 class PublicAvatarController extends Controller
@@ -17,7 +18,14 @@ class PublicAvatarController extends Controller
 
     public function call(Request $request): View
     {
-        return view('public.call', ['avatar' => $this->avatar($request)]);
+        $avatar = $this->avatar($request);
+
+        return view('public.call', [
+            'avatar' => $avatar,
+            'backgroundUrl' => $avatar->background_path
+                ? Storage::disk('public')->url($avatar->background_path)
+                : null,
+        ]);
     }
 
     public function status(Request $request): JsonResponse

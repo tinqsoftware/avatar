@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreAvatarRequest extends FormRequest
 {
@@ -25,8 +26,11 @@ class StoreAvatarRequest extends FormRequest
             'name' => ['required', 'string', 'max:100'],
             'slug' => ['required', 'string', 'regex:/^[a-z0-9-]{2,80}$/', 'unique:avatars,slug'],
             'public_title' => ['required', 'string', 'max:150'],
-            'voice_profile' => ['required', 'in:anita'],
+            'voice_mode' => ['required', Rule::in(['synthetic', 'cloned'])],
+            'voice_profile' => ['nullable', 'string', 'max:100', Rule::requiredIf($this->input('voice_mode') === 'synthetic'), Rule::in(['anita'])],
+            'voice_sample' => ['nullable', 'file', 'mimetypes:audio/mpeg,audio/wav,audio/x-wav,audio/mp4,audio/x-m4a', 'max:25600', Rule::requiredIf($this->input('voice_mode') === 'cloned')],
             'rive' => ['nullable', 'file', 'extensions:riv', 'max:20480'],
+            'background' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:10240', 'dimensions:max_width=4096,max_height=4096'],
         ];
     }
 }

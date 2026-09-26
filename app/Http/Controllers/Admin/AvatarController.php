@@ -80,8 +80,26 @@ class AvatarController extends Controller
      */
     private function attributes(StoreAvatarRequest|UpdateAvatarRequest $request, ?Avatar $avatar = null): array
     {
-        $attributes = $request->safe()->except(['rive', 'status']);
+        $attributes = $request->safe()->except(['rive', 'voice_sample', 'background', 'status']);
         $attributes['status'] = $avatar?->status ?? 'draft';
+
+        if ($attributes['voice_mode'] === 'cloned') {
+            $attributes['voice_profile'] = 'cloned';
+
+            if ($request->hasFile('voice_sample')) {
+                if ($avatar?->voice_sample_path) {
+                    Storage::disk('local')->delete($avatar->voice_sample_path);
+                }
+
+                $attributes['voice_sample_path'] = $request->file('voice_sample')->store("avatars/{$request->string('slug')}/voice-samples", 'local');
+            }
+        } else {
+            if ($avatar?->voice_sample_path) {
+                Storage::disk('local')->delete($avatar->voice_sample_path);
+            }
+
+            $attributes['voice_sample_path'] = null;
+        }
 
         if ($request->hasFile('rive')) {
             $file = $request->file('rive');
@@ -92,6 +110,14 @@ class AvatarController extends Controller
                 Storage::disk('public')->delete($avatar->rive_path);
             }
             $attributes['rive_path'] = $file->store("avatars/{$request->string('slug')}", 'public');
+        }
+
+        if ($request->hasFile('background')) {
+            if ($avatar?->background_path && str_starts_with($avatar->background_path, 'avatars/')) {
+                Storage::disk('public')->delete($avatar->background_path);
+            }
+
+            $attributes['background_path'] = $request->file('background')->store("avatars/{$request->string('slug')}/backgrounds", 'public');
         }
 
         return $attributes;

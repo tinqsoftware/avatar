@@ -16,10 +16,18 @@ class Avatar extends Model
         'name',
         'slug',
         'public_title',
+        'voice_mode',
         'voice_profile',
+        'voice_sample_path',
         'rive_path',
+        'background_path',
         'status',
     ];
+
+    public function usesClonedVoice(): bool
+    {
+        return $this->voice_mode === 'cloned';
+    }
 
     public function conversationVersions(): HasMany
     {

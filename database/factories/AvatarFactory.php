@@ -21,7 +21,9 @@ class AvatarFactory extends Factory
             'name' => fake()->name(),
             'slug' => fake()->unique()->slug(2),
             'public_title' => fake()->sentence(3),
+            'voice_mode' => 'synthetic',
             'voice_profile' => 'anita',
+            'voice_sample_path' => null,
             'rive_path' => 'assets/avatar/anita.riv',
             'status' => 'draft',
         ];

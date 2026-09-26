@@ -16,6 +16,7 @@ class ConversationTreeTest extends TestCase
             'connectors' => ['Espera.'],
             'topics' => [[
                 'id' => 'agua', 'title' => 'Agua', 'keywords' => ['agua'],
+                'description' => 'Información sobre agua segura.', 'examples' => ['Quiero saber sobre el agua.'],
                 'summary' => ['variants' => ['Resumen.']], 'detail' => ['variants' => ['Detalle.']], 'next' => ['variants' => ['Siguiente.']],
             ]],
         ];
@@ -36,5 +37,47 @@ class ConversationTreeTest extends TestCase
             'fallback' => ['variants' => ['No.']],
             'topics' => [],
         ]);
+    }
+
+    public function test_rejects_a_topic_without_examples_for_natural_language_routing(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('examples');
+
+        (new ConversationTree)->validate([
+            'greeting' => ['variants' => ['Hola.']],
+            'fallback' => ['variants' => ['No.']],
+            'connectors' => ['Espera.'],
+            'topics' => [[
+                'id' => 'agua', 'title' => 'Agua', 'description' => 'Información de agua.', 'keywords' => ['agua'],
+                'summary' => ['variants' => ['Resumen.']], 'detail' => ['variants' => ['Detalle.']], 'next' => ['variants' => ['Siguiente.']],
+            ]],
+        ]);
+    }
+
+    public function test_extracts_social_lines_when_the_tree_has_friendly_intents(): void
+    {
+        $tree = [
+            'greeting' => ['variants' => ['Hola.']],
+            'fallback' => ['variants' => ['No.']],
+            'connectors' => ['Espera.'],
+            'social' => [
+                'gratitude' => [
+                    'description' => 'Respuesta a un agradecimiento.',
+                    'examples' => ['Gracias.'],
+                    'keywords' => ['gracias'],
+                    'variants' => ['Con gusto.'],
+                ],
+            ],
+            'topics' => [[
+                'id' => 'agua', 'title' => 'Agua', 'keywords' => ['agua'],
+                'description' => 'Información sobre agua segura.', 'examples' => ['Quiero saber sobre el agua.'],
+                'summary' => ['variants' => ['Resumen.']], 'detail' => ['variants' => ['Detalle.']], 'next' => ['variants' => ['Siguiente.']],
+            ]],
+        ];
+
+        $lines = (new ConversationTree)->lines((new ConversationTree)->validate($tree));
+
+        $this->assertSame('Con gusto.', $lines['social.gratitude.0']);
     }
 }

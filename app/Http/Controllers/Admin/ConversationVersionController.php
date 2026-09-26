@@ -10,6 +10,7 @@ use App\Models\ConversationVersion;
 use App\Services\ConversationTree;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 use InvalidArgumentException;
 
@@ -42,6 +43,9 @@ class ConversationVersionController extends Controller
         if (! config('avatar.voicebox_enabled')) {
             return back()->withErrors(['publish' => 'Configura Salad antes de publicar los MP3 estáticos.']);
         }
+        if ($avatar->usesClonedVoice() && (! $avatar->voice_sample_path || ! Storage::disk('local')->exists($avatar->voice_sample_path))) {
+            return back()->withErrors(['publish' => 'Este avatar necesita su muestra privada de voz antes de publicar.']);
+        }
 
         DB::transaction(function () use ($avatar, $version, $conversationTree): void {
             $version->audioAssets()->delete();
@@ -49,9 +53,10 @@ class ConversationVersionController extends Controller
                 $asset = $version->audioAssets()->create(['asset_key' => $key, 'text' => $text]);
                 GenerateStaticAudio::dispatch($asset->id)->afterCommit();
             }
-            $avatar->conversationVersions()->where('status', 'published')->update(['status' => 'archived']);
             $version->update(['status' => 'generating', 'published_at' => null]);
-            $avatar->update(['status' => 'generating']);
+            if (! $avatar->publishedConversation()) {
+                $avatar->update(['status' => 'generating']);
+            }
         });
 
         return back()->with('success', 'Los audios se están generando. El avatar se publicará cuando todos estén listos.');

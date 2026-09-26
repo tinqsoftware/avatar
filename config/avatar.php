@@ -9,6 +9,8 @@ return [
     // límite solo comprueba salud, no envía texto ni audio.
     'voicebox_health_timeout_seconds' => (int) env('AVATAR_VOICEBOX_HEALTH_TIMEOUT_SECONDS', 5),
     'voicebox_timeout_seconds' => (int) env('AVATAR_VOICEBOX_TIMEOUT_SECONDS', 30),
+    'voicebox_synthetic_speech_path' => env('AVATAR_VOICEBOX_SYNTHETIC_SPEECH_PATH', '/v1/anita/speech'),
+    'voicebox_clone_speech_path' => env('AVATAR_VOICEBOX_CLONE_SPEECH_PATH', '/v1/cloned/speech'),
 
     'router_enabled' => env('AVATAR_ROUTER_ENABLED', false),
     'router_url' => rtrim((string) env('AVATAR_ROUTER_URL', ''), '/'),

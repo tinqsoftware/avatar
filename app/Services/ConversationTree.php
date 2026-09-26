@@ -33,6 +33,7 @@ class ConversationTree
         $this->variants($tree['greeting']['variants'] ?? null, 'greeting.variants');
         $this->variants($tree['fallback']['variants'] ?? null, 'fallback.variants');
         $this->validateConnectors($tree['connectors'] ?? null);
+        $this->validateSocial($tree['social'] ?? null);
 
         if (! is_array($tree['topics'] ?? null) || $tree['topics'] === []) {
             throw new InvalidArgumentException('El árbol debe incluir al menos un tema.');
@@ -50,6 +51,17 @@ class ConversationTree
 
             if (! is_string($topic['title'] ?? null) || trim($topic['title']) === '') {
                 throw new InvalidArgumentException("topics.{$index}.title es obligatorio.");
+            }
+            if (! is_string($topic['description'] ?? null) || trim($topic['description']) === '') {
+                throw new InvalidArgumentException("topics.{$index}.description es obligatorio.");
+            }
+            if (! is_array($topic['examples'] ?? null) || $topic['examples'] === []) {
+                throw new InvalidArgumentException("topics.{$index}.examples debe incluir frases de ejemplo.");
+            }
+            foreach ($topic['examples'] as $example) {
+                if (! is_string($example) || trim($example) === '' || mb_strlen($example) > 300) {
+                    throw new InvalidArgumentException("topics.{$index}.examples contiene un valor inválido.");
+                }
             }
             if (! is_array($topic['keywords'] ?? null) || $topic['keywords'] === []) {
                 throw new InvalidArgumentException("topics.{$index}.keywords debe incluir palabras de referencia.");
@@ -98,6 +110,11 @@ class ConversationTree
                 $lines["connector.{$family}.{$index}"] = $text;
             }
         }
+        foreach ($this->socialFamilies($tree) as $intent => $social) {
+            foreach ($social['variants'] as $index => $text) {
+                $lines["social.{$intent}.{$index}"] = $text;
+            }
+        }
         foreach ($tree['topics'] as $topic) {
             foreach (['summary', 'detail', 'next'] as $stage) {
                 foreach ($topic[$stage]['variants'] as $index => $text) {
@@ -124,6 +141,19 @@ class ConversationTree
             ->all();
     }
 
+    /**
+     * @param  array<string, mixed>  $tree
+     * @return array<string, array{description: string, examples: list<string>, keywords: list<string>, variants: list<string>}>
+     */
+    public function socialFamilies(array $tree): array
+    {
+        if (! is_array($tree['social'] ?? null)) {
+            return [];
+        }
+
+        return $tree['social'];
+    }
+
     private function validateConnectors(mixed $connectors): void
     {
         if (! is_array($connectors)) {
@@ -138,6 +168,43 @@ class ConversationTree
 
         foreach (['queue', 'multi_intro', 'multi_bridge', 'multi_outro', 'continue_last'] as $family) {
             $this->variants($connectors[$family]['variants'] ?? null, "connectors.{$family}.variants");
+        }
+    }
+
+    private function validateSocial(mixed $social): void
+    {
+        if ($social === null) {
+            return;
+        }
+
+        if (! is_array($social) || array_is_list($social)) {
+            throw new InvalidArgumentException('social debe incluir intenciones identificadas por nombre.');
+        }
+
+        foreach ($social as $intent => $definition) {
+            if (! is_string($intent) || preg_match('/^[a-z0-9-]{2,80}$/', $intent) !== 1 || ! is_array($definition)) {
+                throw new InvalidArgumentException('social contiene una intención inválida.');
+            }
+            if (! is_string($definition['description'] ?? null) || trim($definition['description']) === '') {
+                throw new InvalidArgumentException("social.{$intent}.description es obligatorio.");
+            }
+            if (! is_array($definition['examples'] ?? null) || $definition['examples'] === []) {
+                throw new InvalidArgumentException("social.{$intent}.examples debe incluir frases de ejemplo.");
+            }
+            foreach ($definition['examples'] as $example) {
+                if (! is_string($example) || trim($example) === '' || mb_strlen($example) > 300) {
+                    throw new InvalidArgumentException("social.{$intent}.examples contiene un valor inválido.");
+                }
+            }
+            if (! is_array($definition['keywords'] ?? null) || $definition['keywords'] === []) {
+                throw new InvalidArgumentException("social.{$intent}.keywords debe incluir palabras de referencia.");
+            }
+            foreach ($definition['keywords'] as $keyword) {
+                if (! is_string($keyword) || trim($keyword) === '') {
+                    throw new InvalidArgumentException("social.{$intent}.keywords contiene un valor inválido.");
+                }
+            }
+            $this->variants($definition['variants'] ?? null, "social.{$intent}.variants");
         }
     }
 }

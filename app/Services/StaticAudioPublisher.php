@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\AudioAsset;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use RuntimeException;
@@ -40,14 +41,7 @@ class StaticAudioPublisher
         }
 
         try {
-            $response = Http::acceptJson()
-                ->timeout(config('avatar.voicebox_timeout_seconds'))
-                ->withToken(config('avatar.voicebox_token'))
-                ->post(config('avatar.voicebox_url').'/v1/anita/speech', [
-                    'input' => $asset->text,
-                    'voice' => $asset->conversationVersion->avatar->voice_profile,
-                    'response_format' => 'mp3',
-                ]);
+            $response = $this->requestSpeech($asset);
         } catch (Throwable $exception) {
             throw new RuntimeException('No se pudo contactar la voz de Salad.', previous: $exception);
         }
@@ -79,5 +73,35 @@ class StaticAudioPublisher
             'status' => 'ready',
             'error' => null,
         ]);
+    }
+
+    private function requestSpeech(AudioAsset $asset): Response
+    {
+        $avatar = $asset->conversationVersion->avatar;
+        $request = Http::acceptJson()
+            ->connectTimeout(5)
+            ->timeout(config('avatar.voicebox_timeout_seconds'))
+            ->withToken(config('avatar.voicebox_token'))
+            ->withHeaders(['Idempotency-Key' => "audio-{$asset->id}"]);
+
+        if (! $avatar->usesClonedVoice()) {
+            return $request->post(config('avatar.voicebox_url').config('avatar.voicebox_synthetic_speech_path'), [
+                'input' => $asset->text,
+                'voice' => $avatar->voice_profile,
+                'response_format' => 'mp3',
+            ]);
+        }
+
+        if (! $avatar->voice_sample_path || ! Storage::disk('local')->exists($avatar->voice_sample_path)) {
+            throw new RuntimeException('Este avatar no tiene una muestra privada de voz disponible.');
+        }
+
+        return $request
+            ->attach('voice_sample', Storage::disk('local')->get($avatar->voice_sample_path), basename($avatar->voice_sample_path))
+            ->post(config('avatar.voicebox_url').config('avatar.voicebox_clone_speech_path'), [
+                'input' => $asset->text,
+                'voice_mode' => 'cloned',
+                'response_format' => 'mp3',
+            ]);
     }
 }
