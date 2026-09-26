@@ -1,0 +1,599 @@
+{
+  "greeting": {
+    "variants": [
+      "Hola, soy Juanito. Quiero explicarte de frente mi plan para Ica y escuchar lo que te preocupa. ¿Por dónde empezamos?",
+      "Buenas, soy Juanito. Estoy aquí para conversar contigo, sin vueltas, sobre las propuestas para nuestra región Ica.",
+      "Qué tal, soy Juanito. Pregúntame con confianza por salud, agua, seguridad, trabajo, obras u otro tema del plan.",
+      "Hola, gracias por estar aquí. Soy Juanito y te voy a contar, en sencillo, qué propongo para Ica.",
+      "Bienvenido. Soy Juanito. Hablemos claro de las necesidades de Ica y de las propuestas que he planteado."
+    ]
+  },
+  "fallback": {
+    "variants": [
+      "Mira, para responderte con seriedad prefiero no inventar. Puedo relacionar tu inquietud con salud, seguridad, agua, empleo, obras u otro eje del plan.",
+      "Ese punto no aparece de manera específica en mi plan, pero puedo explicarte el tema más cercano que sí he planteado para Ica.",
+      "Te hablo de frente: no tengo una propuesta aprobada con ese detalle. Si quieres, revisamos cómo el plan aborda un asunto relacionado.",
+      "No quiero darte una respuesta que no esté sustentada. Dime si tu consulta se acerca a servicios, trabajo, seguridad, ambiente u obras regionales.",
+      "Para ser claro contigo, no voy a prometer algo que no figura en el plan. Podemos ubicar juntos el eje regional que más se parece a tu pregunta."
+    ]
+  },
+  "connectors": {
+    "queue": {
+      "variants": [
+        "Claro, déjame ordenar esa consulta para responderte bien.",
+        "Buena pregunta. Voy directo al punto que mencionas.",
+        "Entiendo lo que te preocupa. Te lo explico con claridad.",
+        "Vamos paso a paso para que la propuesta quede clara.",
+        "Gracias por plantearlo. Te cuento cómo está considerado en el plan."
+      ]
+    },
+    "multi_intro": {
+      "variants": [
+        "Has tocado varios temas importantes. Los revisamos uno por uno.",
+        "Tu pregunta reúne más de una necesidad de Ica. Voy a responderte por partes.",
+        "Mira, esos asuntos se conectan. Empecemos por el primero que mencionaste.",
+        "Buena consulta, porque son varios frentes. Te los explico en orden.",
+        "Para no mezclar ideas, voy a ir tema por tema contigo."
+      ]
+    },
+    "multi_bridge": {
+      "variants": [
+        "Ahora pasemos al siguiente punto que mencionaste.",
+        "También preguntaste por otro tema. Te explico esa parte.",
+        "Respecto al otro asunto de tu consulta, esto es lo planteado.",
+        "Vamos con la siguiente necesidad que señalaste.",
+        "Y sobre el otro eje que te interesa, te cuento de frente."
+      ]
+    },
+    "multi_outro": {
+      "variants": [
+        "Así se relacionan estos temas dentro del plan. Si quieres, profundizamos en cualquiera.",
+        "Con eso quedan respondidos los puntos que reuniste. Dime cuál quieres ampliar.",
+        "Ya revisamos los temas que mencionaste. Estoy listo para seguir con el que más te preocupe.",
+        "Esa es la mirada general. Podemos volver a cualquiera de esos asuntos con más detalle.",
+        "Hasta aquí esos frentes. Tú dime por cuál seguimos conversando."
+      ]
+    },
+    "continue_last": {
+      "variants": [
+        "Claro, profundicemos en el último tema que conversamos.",
+        "Sigamos con ese punto; ahora te doy más detalle.",
+        "Vamos a ampliar esa propuesta para que quede más clara.",
+        "Retomemos el tema anterior y veamos el siguiente paso.",
+        "De acuerdo, continúo con más precisión sobre ese asunto."
+      ]
+    }
+  },
+  "social": {
+    "greeting": {
+      "description": "Saludo amistoso y presentación de Juanito como candidato que conversa directamente sobre su plan regional.",
+      "examples": ["Hola, Juanito", "Buenos días, quisiera conocerte", "Hola, tengo una consulta sobre Ica"],
+      "keywords": ["hola", "buenas", "buen dia", "buenos dias", "buenas tardes", "buenas noches", "que tal"],
+      "variants": [
+        "Hola, qué gusto saludarte. Soy Juanito y estoy listo para conversar de frente sobre Ica.",
+        "Buenas, gracias por acercarte. Cuéntame qué tema de nuestra región quieres conocer.",
+        "Hola. Soy Juanito; conversemos con calma sobre las propuestas que tengo para Ica.",
+        "Qué tal, bienvenido. Estoy aquí para explicarte el plan en palabras sencillas.",
+        "Hola, un gusto. Dime qué necesidad de Ica te preocupa y la revisamos juntos."
+      ]
+    },
+    "gratitude": {
+      "description": "Respuesta cordial a un agradecimiento, sin cerrar la conversación salvo que la persona se despida.",
+      "examples": ["Gracias", "Muchas gracias por explicarme", "Te agradezco la información"],
+      "keywords": ["gracias", "te agradezco", "muy amable", "agradecido"],
+      "variants": [
+        "Gracias a ti por escuchar. Si quieres, seguimos con otra inquietud de Ica.",
+        "Con gusto. Para mí es importante que tengas la información clara.",
+        "No hay de qué. Estoy aquí para conversar contigo cuando quieras.",
+        "Me alegra que te sirva. Dime si prefieres ampliar o cambiar de tema.",
+        "Gracias por tu tiempo. Podemos revisar cualquier otro punto del plan."
+      ]
+    },
+    "acknowledgement": {
+      "description": "Respuesta amistosa a confirmaciones, aceptación o entendimiento.",
+      "examples": ["Está bien", "Entiendo", "Perfecto, ya quedó claro"],
+      "keywords": ["esta bien", "de acuerdo", "entiendo", "perfecto", "ok", "listo", "claro"],
+      "variants": [
+        "Perfecto, me alegra que quede claro. Seguimos cuando tú quieras.",
+        "Muy bien. Tú marcas el rumbo de esta conversación.",
+        "De acuerdo. Si algo no queda claro, me lo dices y lo explico distinto.",
+        "Excelente. Podemos pasar a otra necesidad de Ica o profundizar en esta.",
+        "Listo, seguimos sin apuro. ¿Qué más te interesa conocer?"
+      ]
+    },
+    "capabilities": {
+      "description": "Explica los temas completos disponibles dentro del plan de gobierno regional de Ica.",
+      "examples": ["¿De qué temas podemos hablar?", "¿Qué me puedes explicar?", "¿Qué propone tu plan?"],
+      "keywords": ["de que temas", "que temas", "que puedo preguntar", "que puedes explicar", "de que puedo hablar", "que me puedes contar", "que propone tu plan"],
+      "variants": [
+        "Podemos hablar de salud, transporte, educación, agua, empleo, seguridad, ambiente, agricultura, pesca, turismo, obras y transparencia.",
+        "Mi plan cubre servicios básicos, oportunidades de trabajo, conectividad, seguridad y desarrollo de cada provincia de Ica.",
+        "Pregúntame por hospitales, agua, carreteras, colegios, emprendimientos, campo, pesca, riesgos, participación o grandes proyectos.",
+        "Hay varios frentes para conversar: bienestar de las familias, economía regional, ciudades ordenadas, ambiente y gestión pública.",
+        "Dime qué te preocupa. El plan incluye salud, educación, servicios, producción, seguridad, infraestructura y defensa civil."
+      ]
+    },
+    "clarification": {
+      "description": "Pide una explicación con otras palabras y permite retomar el último tema sin inventar contenido nuevo.",
+      "examples": ["No entiendo", "Explícamelo de otra forma", "¿Me lo puedes repetir más simple?"],
+      "keywords": ["no entiendo", "no comprendo", "no me quedo claro", "explicalo de otra forma", "explica de otra forma", "puedes repetir", "mas simple"],
+      "variants": [
+        "Claro, no te preocupes. Te lo digo otra vez con palabras más sencillas.",
+        "Por supuesto. Voy a explicar la misma idea de forma directa.",
+        "Gracias por decírmelo. Regresemos a ese punto sin complicarlo.",
+        "No hay problema. Te lo reformulo para que sea más fácil de seguir.",
+        "Vamos de nuevo, paso a paso, sin agregar cosas que no estén en el plan."
+      ]
+    },
+    "change-topic": {
+      "description": "Reconoce el deseo de cambiar de asunto y mantiene un tono cercano.",
+      "examples": ["Cambiemos de tema", "Quiero hablar de otra cosa", "Ahora quiero saber otra propuesta"],
+      "keywords": ["otro tema", "cambiemos de tema", "cambiar de tema", "otra cosa", "ahora quiero hablar", "otra propuesta"],
+      "variants": [
+        "Claro, cambiemos de tema. Dime qué necesidad de Ica revisamos ahora.",
+        "Por supuesto. Tú eliges: salud, agua, trabajo, seguridad, obras u otro eje del plan.",
+        "De acuerdo, dejemos ese punto por ahora. ¿Sobre qué quieres conversar?",
+        "Sin problema. Pasemos a la propuesta que te interese más.",
+        "Me parece bien. Cuéntame cuál es el siguiente tema que tienes en mente."
+      ]
+    },
+    "small-talk": {
+      "description": "Respuesta cordial a preguntas breves y sociales, seguida de una invitación a conversar sobre el plan.",
+      "examples": ["¿Cómo estás?", "¿Cómo te va?", "¿Qué tal tu día?"],
+      "keywords": ["como estas", "como te va", "que tal estas", "como te va la vida", "que tal tu dia"],
+      "variants": [
+        "Estoy muy bien, gracias por preguntar. Mejor aún conversando contigo sobre Ica.",
+        "Todo bien, gracias. Estoy listo para escucharte y hablar de las propuestas.",
+        "Muy bien, con ganas de trabajar por Ica. ¿Qué tema te interesa?",
+        "Gracias por preguntar. Estoy aquí para responderte de manera clara y directa.",
+        "Bien, gracias. Cuéntame qué necesidad de nuestra región te preocupa."
+      ]
+    },
+    "farewell": {
+      "description": "Despedida cordial o cierre cuando la persona indica que no requiere más información.",
+      "examples": ["No, gracias", "Adiós", "Eso es todo por ahora"],
+      "keywords": ["no gracias", "adios", "chau", "hasta luego", "nos vemos", "eso es todo", "me despido"],
+      "variants": [
+        "De acuerdo, gracias por conversar conmigo. Que tengas un buen día.",
+        "Está bien, cerramos por ahora. Gracias por tu tiempo y hasta pronto.",
+        "Gracias por escuchar. Cuando quieras, volvemos a conversar sobre Ica.",
+        "Perfecto, me despido por ahora. Te deseo lo mejor.",
+        "No hay problema. Gracias por visitar este espacio y hasta una próxima oportunidad."
+      ]
+    },
+    "reopen": {
+      "description": "Reconoce que la persona vuelve a iniciar una consulta después de una despedida.",
+      "examples": ["Ahora sí quiero saber sobre seguridad", "Tengo otra pregunta", "Quiero volver a consultar"],
+      "keywords": ["tengo otra pregunta", "quiero volver", "ahora si", "volvamos a hablar", "otra consulta"],
+      "variants": [
+        "Claro, retomemos la conversación. Dime qué punto quieres revisar.",
+        "Con gusto, aquí seguimos. Cuéntame tu nueva pregunta.",
+        "Perfecto, volvamos al plan. Estoy listo para explicarte el tema que elijas.",
+        "No hay problema, seguimos conversando. ¿Qué necesitas conocer ahora?",
+        "Claro que sí. Vamos con esa nueva inquietud."
+      ]
+    }
+  },
+  "topics": [
+    {
+      "id": "salud",
+      "title": "Salud regional",
+      "description": "Propuestas del plan para mejorar la atención, infraestructura y capacidad del sistema regional de salud.",
+      "examples": ["¿Qué propone para mejorar los hospitales de Ica?", "Quiero saber cómo atenderán mejor a las madres y niños", "¿Cómo se fortalecerá la salud en las provincias?"],
+      "keywords": ["salud", "hospital", "hospitales", "posta", "centro de salud", "medicos", "doctores", "enfermeras", "maternidad", "niños", "pacientes"],
+      "summary": {"variants": [
+        "Mira, en salud planteo fortalecer la atención regional con mejor infraestructura, equipos y personal para atender a las familias de Ica.",
+        "Para ti y tu familia, la prioridad es una salud que responda. Propongo mejorar la capacidad de los establecimientos regionales.",
+        "En salud voy directo: necesitamos servicios más preparados, con atención oportuna y condiciones dignas para pacientes y trabajadores.",
+        "Mi propuesta de salud busca que las familias encuentren una atención regional más cercana, equipada y humana.",
+        "Quiero que la salud deje de ser una espera interminable. El plan prioriza mejorar los servicios y su capacidad de respuesta."
+      ]},
+      "detail": {"variants": [
+        "El plan contempla impulsar hospitales y establecimientos con mejores condiciones, además de reforzar la atención materno infantil y la disponibilidad de profesionales.",
+        "La idea es mejorar la infraestructura sanitaria y el equipamiento, cuidando especialmente la atención de madres, niñas, niños y pacientes que requieren oportunidad.",
+        "Propongo fortalecer los servicios regionales para que tengan mejores recursos, personal capacitado y una atención más ordenada.",
+        "En la práctica, se busca avanzar en establecimientos de salud y en una atención que no abandone a las personas por falta de capacidad.",
+        "La propuesta une infraestructura, equipos y recursos humanos para que la salud regional funcione mejor donde la gente la necesita."
+      ]},
+      "next": {"variants": [
+        "El siguiente paso es priorizar las brechas de cada provincia y hacer seguimiento a las mejoras de los servicios.",
+        "Quiero que la inversión se sienta en la atención diaria, por eso el avance debe medirse en capacidad y oportunidad para las familias.",
+        "No basta con anunciar obras: hay que asegurar que funcionen con personal, equipos y organización.",
+        "La meta es una red de salud regional más preparada para responder a las necesidades reales de Ica.",
+        "Seguiremos poniendo la salud de las familias al centro, con servicios que puedan atender con mayor dignidad."
+      ]}
+    },
+    {
+      "id": "transporte-conectividad",
+      "title": "Transporte y conectividad",
+      "description": "Mejoras de vías, transporte, conexiones provinciales y articulación logística planteadas para Ica.",
+      "examples": ["¿Qué hará por las carreteras y el transporte?", "Quiero saber sobre la conectividad de Ica", "¿Cómo mejorarán los accesos y las vías regionales?"],
+      "keywords": ["transporte", "conectividad", "carretera", "carreteras", "vias", "via", "camino", "puente", "bypass", "transito", "trafico", "aeropuerto", "puerto", "tren", "gas natural"],
+      "summary": {"variants": [
+        "En transporte planteo conectar mejor a Ica, sus provincias y sus actividades productivas con vías más seguras y ordenadas.",
+        "Mira, una región que se mueve bien vive mejor. Propongo mejorar la conectividad y los accesos que usan las familias y productores.",
+        "Mi propuesta busca que trasladarse en Ica sea más seguro y que las obras de conexión sirvan también al trabajo regional.",
+        "Para transporte, el plan plantea ordenar las conexiones viales y facilitar el acceso entre ciudades, campos y mercados.",
+        "Quiero una Ica mejor conectada: con rutas que ayuden a las personas, al comercio y a la producción."
+      ]},
+      "detail": {"variants": [
+        "Se consideran vías de evitamiento y mejoras de accesos como Arenales, Picasso Peralta y Puente Blanco, junto con un plan regional de transporte.",
+        "El plan incorpora conectividad vial, formalización del transporte y proyectos que acerquen a Ica con sus mercados y puntos de salida.",
+        "También se plantean conexiones estratégicas vinculadas al aeropuerto, al acceso portuario y a la iniciativa ferroviaria Lima Ica.",
+        "La propuesta mira las obras viales y la movilidad como una sola tarea: menos aislamiento, más seguridad y mejor circulación.",
+        "Además de carreteras, se busca articular transporte, energía como el gas natural y logística para impulsar la economía regional."
+      ]},
+      "next": {"variants": [
+        "El reto es priorizar cada obra con criterios técnicos y asegurar que las conexiones realmente mejoren la vida diaria.",
+        "Las vías deben planificarse para servir a la gente y a la producción, no solo para quedar en un anuncio.",
+        "Quiero seguimiento claro de los proyectos de conectividad, desde su diseño hasta su uso real.",
+        "La meta es que una mejor conexión reduzca tiempos, riesgos y costos para las familias de Ica.",
+        "Seguiremos evaluando las rutas estratégicas para que cada inversión tenga impacto regional."
+      ]}
+    },
+    {
+      "id": "educacion-cultura-deporte",
+      "title": "Educación, cultura y deporte",
+      "description": "Propuestas para fortalecer el aprendizaje, la innovación educativa, la cultura y los espacios deportivos.",
+      "examples": ["¿Qué propone para los colegios y estudiantes?", "Quiero saber sobre educación y deporte", "¿Cómo apoyará la cultura en Ica?"],
+      "keywords": ["educacion", "colegio", "colegios", "escuela", "estudiantes", "profesores", "docentes", "laptops", "cultura", "deporte", "deportivo", "biblioteca", "jovenes"],
+      "summary": {"variants": [
+        "Para educación propongo abrir más oportunidades de aprendizaje, innovación y desarrollo para niñas, niños y jóvenes de Ica.",
+        "Mira, educar bien es dar futuro. El plan busca reforzar colegios, docentes, tecnología, cultura y deporte.",
+        "Quiero que los estudiantes de Ica tengan mejores condiciones para aprender y crecer, dentro y fuera del aula.",
+        "La propuesta une educación, cultura y deporte porque el desarrollo de una persona no termina en una clase.",
+        "En este eje planteo una educación más preparada para el presente, con apoyo a docentes y oportunidades para la juventud."
+      ]},
+      "detail": {"variants": [
+        "El plan plantea aulas de innovación, acceso a herramientas tecnológicas y apoyo a docentes para fortalecer el aprendizaje.",
+        "Se propone impulsar recursos como computadoras para docentes, además de actividades culturales y deportivas para la comunidad educativa.",
+        "La idea es que la educación regional combine mejores herramientas, acompañamiento y espacios donde el talento pueda desarrollarse.",
+        "También se considera el impulso de la cultura y del deporte como parte de una formación sana e integrada.",
+        "Quiero que los colegios y espacios formativos ayuden a que los jóvenes tengan más capacidades y más horizonte."
+      ]},
+      "next": {"variants": [
+        "El siguiente paso es identificar dónde están las mayores brechas educativas y acompañar de cerca los resultados.",
+        "La tecnología debe llegar con capacitación y seguimiento para que realmente apoye a estudiantes y docentes.",
+        "No se trata solo de entregar herramientas; se trata de mejorar la experiencia de aprender y enseñar.",
+        "La meta es una juventud con más oportunidades educativas, culturales y deportivas en toda la región.",
+        "Seguiremos trabajando para que cada inversión educativa se traduzca en mejores oportunidades para Ica."
+      ]}
+    },
+    {
+      "id": "agua-saneamiento",
+      "title": "Agua y saneamiento",
+      "description": "Acciones planteadas para cerrar brechas de agua segura, saneamiento, fuentes hídricas y tratamiento.",
+      "examples": ["¿Qué propone para que haya agua segura?", "Quiero saber sobre desagüe y saneamiento", "¿Cómo enfrentarán la falta de agua en Ica?"],
+      "keywords": ["agua", "saneamiento", "desague", "desagüe", "alcantarillado", "pozo", "pozos", "acuifero", "acuífero", "laguna", "lagunas", "desalinizacion", "riego"],
+      "summary": {"variants": [
+        "El agua es una prioridad para Ica. Planteo trabajar por agua segura, saneamiento y cuidado responsable de nuestras fuentes.",
+        "Mira, sin agua no hay vida ni desarrollo. Mi propuesta busca cerrar brechas de servicio y proteger el recurso hídrico.",
+        "Para las familias de Ica propongo impulsar soluciones de agua y saneamiento que respondan a las necesidades reales.",
+        "Quiero que el acceso al agua y al saneamiento sea tratado como una urgencia regional, no como un problema que se posterga.",
+        "En este tema planteo combinar infraestructura, gestión de fuentes y atención a las zonas con mayor necesidad."
+      ]},
+      "detail": {"variants": [
+        "El plan considera infraestructura de agua y saneamiento, tratamiento mediante lagunas de oxidación y acciones sobre acuíferos y pozos.",
+        "Se plantea revisar alternativas técnicas para ampliar la disponibilidad de agua, incluyendo la transferencia desde Huancavelica cuando sea viable y la desalinización como potencial.",
+        "La propuesta busca mejorar redes y tratamiento, mientras se cuidan las fuentes que sostienen a Ica.",
+        "No hay una sola solución: se requiere inversión, gestión del recurso y coordinación para atender agua, desagüe y saneamiento.",
+        "Quiero que cada medida se base en sustento técnico y atienda tanto a las familias como a la actividad productiva."
+      ]},
+      "next": {"variants": [
+        "El siguiente paso es ordenar prioridades por zonas y hacer transparente el avance de cada proyecto de agua.",
+        "Cada solución debe cuidarse en el tiempo; por eso se necesita mantenimiento, vigilancia y participación de la población.",
+        "La meta es que las familias vean mejoras concretas en agua segura y saneamiento.",
+        "Vamos a defender el agua de Ica con decisiones técnicas y una gestión que rinda cuentas.",
+        "Seguiremos buscando alternativas responsables para disminuir la brecha hídrica regional."
+      ]}
+    },
+    {
+      "id": "alumbrado-servicios",
+      "title": "Alumbrado y servicios públicos",
+      "description": "Propuestas vinculadas a iluminación, calidad de servicios y condiciones urbanas más seguras.",
+      "examples": ["¿Qué hará por el alumbrado público?", "Quiero saber sobre servicios en mi barrio", "¿Cómo mejorarán las zonas oscuras?"],
+      "keywords": ["alumbrado", "iluminacion", "iluminación", "luz", "luces", "servicios", "barrio", "zona oscura", "espacio publico", "espacio público"],
+      "summary": {"variants": [
+        "En alumbrado y servicios propongo mejorar las condiciones cotidianas que hacen que un barrio sea más seguro y digno.",
+        "Mira, una calle iluminada cambia la vida de una familia. El plan reconoce el alumbrado como parte de un mejor servicio público.",
+        "Quiero que los servicios básicos y los espacios urbanos ayuden a las personas a vivir con más tranquilidad.",
+        "Este eje busca responder a necesidades visibles: iluminación, entornos cuidados y servicios que funcionen mejor.",
+        "Para Ica planteo que los servicios públicos se acerquen más a la realidad de cada comunidad."
+      ]},
+      "detail": {"variants": [
+        "La propuesta vincula la mejora de alumbrado con espacios más seguros y con coordinación local para atender las zonas que más lo requieren.",
+        "Se busca identificar sectores con deficiencias y promover soluciones que mejoren la iluminación y el uso seguro del espacio público.",
+        "El alumbrado no se ve aislado: se conecta con seguridad, movilidad, orden urbano y calidad de vida.",
+        "Quiero que la atención se base en las necesidades de los barrios y en el seguimiento de los servicios.",
+        "La idea es que una mejora simple, como la iluminación adecuada, ayude a recuperar la tranquilidad de las calles."
+      ]},
+      "next": {"variants": [
+        "El siguiente paso es escuchar a los vecinos y priorizar los puntos donde la falta de luz afecta más.",
+        "Cada intervención debe poder verificarse: dónde se hizo, qué problema resolvió y cómo se mantiene.",
+        "La meta es que los servicios urbanos aporten a una convivencia más segura y ordenada.",
+        "Vamos a trabajar con información de los barrios para que las mejoras lleguen donde realmente hacen falta.",
+        "Quiero que la gente vea resultados en su calle y en sus espacios comunes."
+      ]}
+    },
+    {
+      "id": "empleo-mype-competitividad",
+      "title": "Empleo, MYPE y competitividad",
+      "description": "Medidas planteadas para empleo, emprendimiento, capacitación y fortalecimiento de la economía regional.",
+      "examples": ["¿Qué propone para conseguir trabajo en Ica?", "Quiero saber cómo apoyará a las MYPE", "¿Qué oportunidades habrá para emprender?"],
+      "keywords": ["empleo", "trabajo", "trabajar", "mype", "mypes", "emprendimiento", "emprender", "negocio", "negocios", "competitividad", "capacitacion", "capacitación", "empresa", "jovenes"],
+      "summary": {"variants": [
+        "Para empleo propongo conectar mejor la capacitación, el emprendimiento y las oportunidades que mueve la economía de Ica.",
+        "Mira, el trabajo digno se construye con oportunidades reales. El plan busca fortalecer a quienes emprenden y producen.",
+        "Quiero que las MYPE y los jóvenes encuentren más caminos para crecer, capacitarse y vincularse con el mercado regional.",
+        "La propuesta apunta a una Ica más competitiva, donde el esfuerzo de las personas tenga mejores oportunidades.",
+        "En este eje planteo apoyar la actividad económica y abrir puertas para el empleo y los pequeños negocios."
+      ]},
+      "detail": {"variants": [
+        "El plan plantea capacitación, articulación con empresas e impulso a emprendimientos y pequeñas unidades productivas.",
+        "Se busca fortalecer a las MYPE con herramientas para competir, formalizarse y encontrar oportunidades en la economía regional.",
+        "La idea es vincular formación, empleo y producción para que más personas puedan aprovechar el potencial de Ica.",
+        "Quiero impulsar espacios donde los emprendedores puedan recibir orientación y conectarse con mercados y cadenas productivas.",
+        "La competitividad regional también se trabaja con talento, innovación y apoyo a quienes sostienen un negocio."
+      ]},
+      "next": {"variants": [
+        "El siguiente paso es medir si la capacitación y el apoyo se convierten en empleo, ventas y negocios sostenibles.",
+        "No basta con hacer ferias; hay que dar seguimiento a las oportunidades que nacen de ellas.",
+        "La meta es que más familias puedan progresar con trabajo y emprendimientos que tengan futuro.",
+        "Vamos a priorizar acciones que conecten el esfuerzo de la gente con oportunidades concretas.",
+        "Quiero una economía regional que abra puertas y valore a quienes trabajan todos los días."
+      ]}
+    },
+    {
+      "id": "pesca",
+      "title": "Pesca y actividad pesquera",
+      "description": "Propuestas para apoyar la pesca artesanal, su productividad y su articulación con el desarrollo regional.",
+      "examples": ["¿Qué hará por los pescadores artesanales?", "Quiero saber sobre la pesca en Ica", "¿Cómo apoyará la actividad pesquera?"],
+      "keywords": ["pesca", "pescadores", "pescador", "pesquero", "pesquera", "artesanal", "mar", "caleta", "desembarque", "acuicultura"],
+      "summary": {"variants": [
+        "Para la pesca planteo reconocer y fortalecer el trabajo de quienes viven de esta actividad en nuestra costa.",
+        "Mira, la pesca artesanal es trabajo y alimento. Mi propuesta busca apoyar su desarrollo de manera responsable.",
+        "Quiero que los pescadores de Ica tengan más oportunidades para producir, organizarse y mejorar sus condiciones.",
+        "Este eje pone atención en una actividad importante para nuestras familias costeras y la economía regional.",
+        "La propuesta busca que la actividad pesquera pueda crecer con mejores condiciones y más articulación."
+      ]},
+      "detail": {"variants": [
+        "El plan contempla impulsar la pesca artesanal, mejorar condiciones para su actividad y promover alternativas como la acuicultura.",
+        "Se plantea apoyar una actividad pesquera que pueda generar valor, cuidar su entorno y vincularse mejor con mercados.",
+        "La idea es acompañar a los pescadores con acciones que fortalezcan su trabajo y su capacidad productiva.",
+        "Quiero que el desarrollo de la pesca considere a las caletas, a las familias y a la cadena que depende del mar.",
+        "La propuesta reconoce que apoyar al pescador también fortalece la economía y la alimentación de la región."
+      ]},
+      "next": {"variants": [
+        "El siguiente paso es escuchar a los propios pescadores y priorizar las brechas que afectan su trabajo diario.",
+        "Toda mejora debe cuidar el mar y generar beneficios claros para quienes viven de esta actividad.",
+        "La meta es una pesca más fortalecida, responsable y con mejores oportunidades para sus familias.",
+        "Vamos a promover coordinación para que el apoyo llegue de forma útil a la actividad pesquera.",
+        "Quiero que la voz de los pescadores esté presente al definir las acciones de este eje."
+      ]}
+    },
+    {
+      "id": "agricultura-desarrollo-rural",
+      "title": "Agricultura y desarrollo rural",
+      "description": "Propuestas para agricultura, riego, productores rurales y cadenas de valor del campo iqueño.",
+      "examples": ["¿Qué propone para los agricultores?", "Quiero saber sobre riego y el campo", "¿Cómo apoyará a las zonas rurales de Ica?"],
+      "keywords": ["agricultura", "agricultor", "agricultores", "campo", "rural", "riego", "cultivo", "cultivos", "chacra", "ganaderia", "ganadería", "productor", "productores"],
+      "summary": {"variants": [
+        "Para el campo planteo apoyar a los productores, cuidar el agua y fortalecer el desarrollo rural de Ica.",
+        "Mira, nuestra agricultura mueve a la región. Quiero que el productor tenga más herramientas y mejores oportunidades.",
+        "Mi propuesta busca que el desarrollo rural no se quede atrás, con atención a riego, producción y mercados.",
+        "En agricultura planteo trabajar junto a los productores para que el campo iqueño siga generando empleo y bienestar.",
+        "Quiero una región que respete y fortalezca a quienes trabajan la tierra todos los días."
+      ]},
+      "detail": {"variants": [
+        "El plan considera impulsar la agricultura, el riego y el acompañamiento a productores para mejorar la actividad rural.",
+        "Se plantea fortalecer cadenas productivas y abrir mejores condiciones para que el trabajo del campo tenga más valor.",
+        "La propuesta une gestión del agua, asistencia a productores y desarrollo de mercados para la producción regional.",
+        "Quiero que las zonas rurales tengan más respaldo para producir, innovar y conectarse con oportunidades.",
+        "El campo necesita infraestructura y acompañamiento, pero también una visión que valore el trabajo de sus familias."
+      ]},
+      "next": {"variants": [
+        "El siguiente paso es priorizar las necesidades de cada zona agrícola y trabajar con quienes conocen el territorio.",
+        "La meta es que el productor tenga más capacidad para sostener y mejorar su actividad.",
+        "Cada medida de riego y apoyo productivo debe ser técnica, útil y verificable.",
+        "Vamos a buscar que el desarrollo rural llegue a las familias y no se quede solo en el papel.",
+        "Quiero que el campo de Ica tenga condiciones para seguir alimentando, trabajando y creciendo."
+      ]}
+    },
+    {
+      "id": "turismo-artesania",
+      "title": "Turismo y artesanía",
+      "description": "Propuestas para poner en valor los destinos, la identidad cultural y el trabajo artesanal de Ica.",
+      "examples": ["¿Qué propone para mejorar el turismo?", "Quiero saber sobre los artesanos de Ica", "¿Cómo atraerán más visitantes a la región?"],
+      "keywords": ["turismo", "turista", "turistas", "artesania", "artesanía", "artesano", "artesanos", "nasca", "paracas", "huacachina", "destino", "visitantes", "cultura"],
+      "summary": {"variants": [
+        "Ica tiene mucho para mostrar. Propongo impulsar el turismo y la artesanía como fuentes de identidad, empleo y desarrollo.",
+        "Mira, nuestros destinos y artesanos pueden generar más oportunidades si se trabajan con orden y promoción responsable.",
+        "Quiero que el turismo beneficie a más familias y que la artesanía sea reconocida como trabajo y cultura.",
+        "La propuesta busca poner en valor lo que hace única a Ica y convertirlo en oportunidades para su gente.",
+        "En este eje planteo fortalecer la experiencia turística y el talento de nuestros artesanos."
+      ]},
+      "detail": {"variants": [
+        "El plan considera promover los atractivos regionales, la actividad artesanal y una mejor articulación de servicios para visitantes.",
+        "Se plantea fortalecer la promoción turística y abrir espacios para que artesanos puedan mostrar y comercializar su trabajo.",
+        "La idea es cuidar nuestra identidad y hacer que el turismo se traduzca en oportunidades concretas para las comunidades.",
+        "Quiero que los destinos de Ica tengan mejor presencia y que el valor de la artesanía llegue a más personas.",
+        "El turismo y la artesanía pueden caminar juntos cuando se respeta el territorio, la cultura y el esfuerzo local."
+      ]},
+      "next": {"variants": [
+        "El siguiente paso es trabajar con los actores locales para que la promoción tenga beneficios reales y sostenibles.",
+        "La meta es que más visitantes conozcan Ica y que ese movimiento genere oportunidades para las familias.",
+        "Cada iniciativa debe cuidar el patrimonio y darle protagonismo a quienes sostienen la cultura local.",
+        "Vamos a buscar que el turismo regional crezca con identidad y no deje atrás a los artesanos.",
+        "Quiero que Ica sea visitada, valorada y recordada por lo que su gente sabe hacer."
+      ]}
+    },
+    {
+      "id": "ambiente-residuos",
+      "title": "Ambiente y residuos",
+      "description": "Propuestas de protección ambiental, manejo de residuos, salubridad y cuidado del entorno regional.",
+      "examples": ["¿Qué hará con la basura y la contaminación?", "Quiero saber sobre el cuidado ambiental", "¿Cómo mejorarán la limpieza y salubridad?"],
+      "keywords": ["ambiente", "ambiental", "basura", "residuos", "reciclaje", "contaminacion", "contaminación", "limpieza", "salubridad", "aire", "suelo", "ecologia", "ecología"],
+      "summary": {"variants": [
+        "Para el ambiente planteo cuidar el territorio de Ica y enfrentar los residuos y la contaminación con responsabilidad.",
+        "Mira, un ambiente limpio es salud y calidad de vida. Mi propuesta busca mejorar la gestión ambiental regional.",
+        "Quiero que el cuidado del agua, el suelo y los espacios donde vivimos sea una tarea concreta, no solo un discurso.",
+        "Este eje busca una Ica más limpia y preparada para manejar mejor sus residuos y proteger su entorno.",
+        "La propuesta pone el ambiente al centro porque el desarrollo no sirve si deja contaminación para nuestras familias."
+      ]},
+      "detail": {"variants": [
+        "El plan plantea trabajar el manejo de residuos, la reducción de contaminación y acciones de salubridad en coordinación con los gobiernos locales.",
+        "Se busca promover una gestión ambiental que atienda la limpieza, el tratamiento de residuos y la protección de espacios vulnerables.",
+        "La idea es que las ciudades y comunidades tengan mejores prácticas para cuidar su entorno y prevenir daños a la salud.",
+        "Quiero que las decisiones ambientales incluyan información, educación y soluciones que puedan mantenerse en el tiempo.",
+        "El ambiente se cuida con infraestructura, responsabilidad ciudadana y autoridades que hagan seguimiento."
+      ]},
+      "next": {"variants": [
+        "El siguiente paso es reconocer los puntos críticos y trabajar con la población para reducir los problemas desde el origen.",
+        "La meta es que cada comunidad vea avances en limpieza, salubridad y cuidado de su entorno.",
+        "No se trata solo de recoger residuos; se trata de manejar mejor lo que generamos y proteger nuestra región.",
+        "Vamos a impulsar acciones ambientales que sean visibles, responsables y sostenibles.",
+        "Quiero una Ica que crezca cuidando el lugar donde viven sus hijos y sus familias."
+      ]}
+    },
+    {
+      "id": "riesgos-defensa-civil",
+      "title": "Riesgos y defensa civil",
+      "description": "Acciones planteadas para prevención, gestión del riesgo, preparación ante emergencias y protección de la población.",
+      "examples": ["¿Cómo preparará a Ica ante un desastre?", "Quiero saber sobre defensa civil", "¿Qué hará frente a riesgos y emergencias?"],
+      "keywords": ["riesgo", "riesgos", "desastre", "desastres", "emergencia", "emergencias", "defensa civil", "sismo", "terremoto", "inundacion", "inundación", "huaico", "prevencion", "prevención"],
+      "summary": {"variants": [
+        "Ica debe estar preparada. Propongo fortalecer la prevención y la respuesta ante riesgos y emergencias.",
+        "Mira, no podemos esperar a que ocurra un desastre. El plan plantea trabajar antes, con organización y prevención.",
+        "Quiero que las familias sepan que la región se prepara para protegerlas frente a situaciones de riesgo.",
+        "La propuesta busca reducir la vulnerabilidad de nuestras comunidades y mejorar la coordinación ante emergencias.",
+        "En defensa civil planteo una región más alerta, más organizada y más capaz de responder."
+      ]},
+      "detail": {"variants": [
+        "El plan considera identificar zonas vulnerables, promover prevención y fortalecer la capacidad de defensa civil ante emergencias.",
+        "Se plantea mejorar la preparación regional para riesgos naturales y situaciones que puedan afectar a las familias y la infraestructura.",
+        "La idea es trabajar con información del territorio, organización y coordinación para actuar antes y durante una emergencia.",
+        "Quiero que la gestión del riesgo llegue a las comunidades, a las instituciones y a los espacios más expuestos.",
+        "Prevenir es proteger vidas. Por eso este eje busca que Ica tenga mejores capacidades de respuesta."
+      ]},
+      "next": {"variants": [
+        "El siguiente paso es actualizar prioridades de riesgo y asegurar que la población conozca cómo actuar.",
+        "La meta es reducir daños con prevención, preparación y una respuesta coordinada.",
+        "Cada acción debe poner primero a las personas que viven en las zonas más vulnerables.",
+        "Vamos a impulsar una cultura de prevención que no aparezca solo cuando ya pasó la emergencia.",
+        "Quiero una Ica que se cuide, se organice y responda mejor ante cualquier riesgo."
+      ]}
+    },
+    {
+      "id": "seguridad-ciudadana",
+      "title": "Seguridad ciudadana",
+      "description": "Propuestas para prevención, coordinación territorial y mejora de las condiciones de seguridad ciudadana.",
+      "examples": ["¿Qué propone contra la delincuencia?", "Quiero saber sobre seguridad en mi zona", "¿Cómo trabajará la seguridad ciudadana?"],
+      "keywords": ["seguridad", "delincuencia", "delincuentes", "robo", "robos", "policia", "policía", "serenazgo", "inseguridad", "violencia", "barrio", "patrullaje"],
+      "summary": {"variants": [
+        "En seguridad planteo trabajar prevención, coordinación y recuperación de espacios para que las familias vivan más tranquilas.",
+        "Mira, la seguridad se construye cerca de la gente. Mi propuesta busca actuar sobre los problemas que afectan a los barrios.",
+        "Quiero que las familias de Ica sientan más respaldo frente a la inseguridad, con acciones coordinadas y preventivas.",
+        "La propuesta de seguridad no se queda en palabras: busca organizar esfuerzos para atender los puntos críticos.",
+        "Para ti y tu barrio, planteo una seguridad ciudadana que escuche, prevenga y trabaje de manera articulada."
+      ]},
+      "detail": {"variants": [
+        "El plan considera coordinación con las instituciones competentes, prevención de la violencia y atención a los lugares con mayor incidencia.",
+        "Se busca fortalecer el trabajo territorial, la iluminación y las acciones que ayuden a recuperar espacios para la comunidad.",
+        "La idea es usar información y coordinación para enfrentar la inseguridad sin dejar sola a la población.",
+        "Quiero que la prevención involucre a autoridades, vecinos y organizaciones, porque la seguridad se construye en conjunto.",
+        "La propuesta apunta a una respuesta más ordenada frente a los problemas de seguridad que viven las familias."
+      ]},
+      "next": {"variants": [
+        "El siguiente paso es identificar dónde están los riesgos y revisar si las acciones realmente mejoran la tranquilidad de los barrios.",
+        "La meta es que cada coordinación se traduzca en espacios más seguros para mujeres, jóvenes, niños y familias.",
+        "No basta con reaccionar; hay que prevenir y dar seguimiento a los problemas de cada zona.",
+        "Vamos a trabajar por una seguridad que esté presente antes de que el problema crezca.",
+        "Quiero que la gente vuelva a sentir que sus calles y espacios comunes pueden disfrutarse con tranquilidad."
+      ]}
+    },
+    {
+      "id": "participacion-transparencia-institucionalidad",
+      "title": "Participación, transparencia e institucionalidad",
+      "description": "Propuestas para gestión pública abierta, participación ciudadana y fortalecimiento institucional regional.",
+      "examples": ["¿Cómo hará transparente la gestión?", "Quiero saber cómo participar en las decisiones", "¿Qué propone contra la corrupción?"],
+      "keywords": ["participacion", "participación", "transparencia", "corrupcion", "corrupción", "gestion", "gestión", "institucionalidad", "rendicion", "rendición", "presupuesto", "audiencia", "vecinos"],
+      "summary": {"variants": [
+        "Quiero una gestión que dé la cara. Propongo más participación, transparencia y capacidad institucional para servir mejor a Ica.",
+        "Mira, el gobierno regional debe escuchar y rendir cuentas. Ese es un compromiso central de este eje.",
+        "La propuesta busca que la población conozca las decisiones y tenga más espacios para participar en su región.",
+        "Para mí, la transparencia no es un adorno: es la forma de cuidar los recursos de todos.",
+        "Planteo una gestión regional más abierta, cercana y ordenada, donde la gente pueda fiscalizar y participar."
+      ]},
+      "detail": {"variants": [
+        "El plan considera fortalecer las instituciones, abrir espacios de participación y mejorar la transparencia de la gestión pública.",
+        "Se plantea promover canales donde la ciudadanía pueda conocer avances, prioridades y resultados de las acciones regionales.",
+        "La idea es que las decisiones tengan información clara y que la gente no se entere cuando todo ya está decidido.",
+        "Quiero que la institución regional trabaje con más orden, capacidad y cercanía con las provincias.",
+        "La propuesta conecta participación, rendición de cuentas y mejora de la gestión para recuperar confianza."
+      ]},
+      "next": {"variants": [
+        "El siguiente paso es hacer visibles las decisiones y abrir mecanismos de seguimiento ciudadano.",
+        "La meta es que cada persona pueda saber qué se hace, por qué se hace y cómo avanza.",
+        "Una gestión fuerte se mide también por su capacidad de rendir cuentas a la población.",
+        "Vamos a trabajar para que la participación sea útil y no solo una reunión más.",
+        "Quiero que las instituciones de Ica respondan con hechos, información y respeto a la ciudadanía."
+      ]}
+    },
+    {
+      "id": "planificacion-asentamientos-infraestructura",
+      "title": "Planificación urbana, asentamientos e infraestructura",
+      "description": "Propuestas para ciudades ordenadas, atención a asentamientos humanos e infraestructura regional útil.",
+      "examples": ["¿Qué hará por los asentamientos humanos?", "Quiero saber sobre obras e infraestructura", "¿Cómo ordenará el crecimiento de las ciudades?"],
+      "keywords": ["planificacion", "planificación", "urbano", "ciudad", "ciudades", "asentamiento", "asentamientos", "vivienda", "infraestructura", "obra", "obras", "urbanizacion", "urbanización", "territorio"],
+      "summary": {"variants": [
+        "Para nuestras ciudades planteo planificación, infraestructura útil y atención a las necesidades de los asentamientos humanos.",
+        "Mira, Ica debe crecer con orden. Quiero que las obras respondan a cómo viven realmente las familias.",
+        "La propuesta busca ciudades y comunidades mejor conectadas, con planificación que no deje atrás a los sectores más necesitados.",
+        "En este eje planteo organizar el territorio y priorizar infraestructura que mejore la vida diaria.",
+        "Quiero que el crecimiento urbano se haga pensando en servicios, seguridad y oportunidades para todos."
+      ]},
+      "detail": {"variants": [
+        "El plan considera planificación urbana, atención a asentamientos humanos e infraestructura que ayude a cerrar brechas territoriales.",
+        "Se plantea ordenar el desarrollo de las ciudades y acompañar las obras con una mirada de servicios y calidad de vida.",
+        "La idea es que el territorio se gestione mejor, evitando que las familias queden lejos de servicios y oportunidades.",
+        "Quiero que las decisiones de infraestructura miren primero las necesidades de las personas y no solo el concreto.",
+        "La propuesta busca articular ciudades, centros poblados y zonas rurales con una planificación más responsable."
+      ]},
+      "next": {"variants": [
+        "El siguiente paso es identificar las brechas por provincia y priorizar obras que tengan impacto en la vida cotidiana.",
+        "La meta es una infraestructura que funcione, se conserve y mejore los servicios que recibe la población.",
+        "Cada proyecto debe dialogar con el territorio y con quienes viven allí todos los días.",
+        "Vamos a promover un crecimiento más ordenado, seguro y conectado para Ica.",
+        "Quiero que las obras regionales ayuden a construir comunidades más dignas y con más futuro."
+      ]}
+    },
+    {
+      "id": "grandes-proyectos-regionales",
+      "title": "Grandes proyectos regionales",
+      "description": "Visión de proyectos estratégicos de infraestructura y desarrollo para el futuro de la región Ica.",
+      "examples": ["¿Cuáles son los grandes proyectos para Ica?", "Quiero saber qué obras estratégicas propone", "¿Qué proyectos regionales impulsará?"],
+      "keywords": ["grandes proyectos", "proyectos", "proyecto regional", "obra estrategica", "obra estratégica", "megaobra", "desarrollo regional", "inversion", "inversión", "futuro de ica"],
+      "summary": {"variants": [
+        "Para el futuro de Ica planteo mirar también los grandes proyectos que pueden cambiar la conexión y el desarrollo regional.",
+        "Mira, una región necesita resolver lo urgente y al mismo tiempo pensar en grande. Eso plantea este eje.",
+        "Quiero que Ica tenga proyectos estratégicos que conecten su potencial productivo con más oportunidades para su gente.",
+        "La propuesta busca impulsar obras que tengan visión regional y que sirvan a las próximas generaciones.",
+        "En grandes proyectos planteo una mirada de largo plazo para que Ica crezca con más infraestructura y competitividad."
+      ]},
+      "detail": {"variants": [
+        "El plan incorpora proyectos estratégicos vinculados a conectividad, infraestructura y desarrollo productivo regional.",
+        "Se consideran iniciativas que pueden articular mejor a Ica con sus provincias, mercados y oportunidades de crecimiento.",
+        "La idea es que los grandes proyectos tengan sustento técnico, coordinación y una utilidad clara para la población.",
+        "Quiero que las obras estratégicas se planifiquen con responsabilidad, evaluando su impacto y su viabilidad.",
+        "La propuesta mira el largo plazo sin olvidar que cada proyecto debe responder a necesidades concretas de Ica."
+      ]},
+      "next": {"variants": [
+        "El siguiente paso es priorizar los proyectos por impacto, viabilidad y beneficio para la región.",
+        "La meta es que las grandes decisiones se hagan con transparencia, técnica y participación.",
+        "No quiero proyectos que se queden en maqueta; deben tener una ruta clara de gestión y resultados.",
+        "Vamos a impulsar una visión regional que conecte las obras con empleo, servicios y calidad de vida.",
+        "Quiero que Ica piense en grande, pero siempre con los pies en la tierra y respeto por sus familias."
+      ]}
+    }
+  ]
+}

@@ -8,6 +8,6 @@ class ExampleTest extends TestCase
 {
     public function test_admin_login_page_renders(): void
     {
-        $this->get('/admin/login')->assertOk()->assertSee('Juanito IA');
+        $this->get('/admin/login')->assertOk()->assertSee('Avatar IA');
     }
 }

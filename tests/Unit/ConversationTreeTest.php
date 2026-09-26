@@ -8,6 +8,23 @@ use PHPUnit\Framework\TestCase;
 
 class ConversationTreeTest extends TestCase
 {
+    public function test_validates_the_complete_juanito_conversation_tree(): void
+    {
+        $tree = json_decode(
+            file_get_contents(__DIR__.'/../../resources/conversation-trees/juanito-somos-peru-ica-2027-2030.json'),
+            true,
+            512,
+            JSON_THROW_ON_ERROR,
+        );
+
+        $lines = (new ConversationTree)->lines((new ConversationTree)->validate($tree));
+
+        $this->assertCount(15, $tree['topics']);
+        $this->assertCount(305, $lines);
+        $this->assertSame('Salud regional', $tree['topics'][0]['title']);
+        $this->assertSame('Grandes proyectos regionales', $tree['topics'][14]['title']);
+    }
+
     public function test_extracts_every_static_line_from_a_valid_tree(): void
     {
         $tree = [
