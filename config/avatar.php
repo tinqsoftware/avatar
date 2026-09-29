@@ -23,4 +23,5 @@ return [
     'router_timeout_seconds' => (int) env('AVATAR_ROUTER_TIMEOUT_SECONDS', 5),
     'public_domain_suffix' => env('AVATAR_PUBLIC_DOMAIN_SUFFIX', 'ia.tinq.pe'),
     'local_default_slug' => env('AVATAR_LOCAL_DEFAULT_SLUG', 'ica-demo'),
+    'google_analytics_measurement_id' => env('GOOGLE_ANALYTICS_MEASUREMENT_ID'),
 ];

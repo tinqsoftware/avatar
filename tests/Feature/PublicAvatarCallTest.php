@@ -119,6 +119,20 @@ class PublicAvatarCallTest extends TestCase
             ->assertSee('<meta name="twitter:card" content="summary_large_image">', false);
     }
 
+    public function test_public_avatar_pages_render_the_google_analytics_tag(): void
+    {
+        $this->publishedAvatar();
+        config(['avatar.google_analytics_measurement_id' => 'G-KWBL93E46F']);
+
+        $this->get('/')
+            ->assertSee('https://www.googletagmanager.com/gtag/js?id=G-KWBL93E46F', false)
+            ->assertSee("gtag('config', \"G-KWBL93E46F\");", false);
+
+        $this->get('/llamada')
+            ->assertSee('https://www.googletagmanager.com/gtag/js?id=G-KWBL93E46F', false)
+            ->assertSee("gtag('config', \"G-KWBL93E46F\");", false);
+    }
+
     public function test_call_renders_topic_titles_from_the_active_conversation_tree(): void
     {
         [, $version] = $this->publishedAvatar();

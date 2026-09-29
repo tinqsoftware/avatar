@@ -19,6 +19,7 @@
         <meta name="twitter:card" content="summary_large_image">
     @endif
     <link rel="stylesheet" href="{{ $callCssUrl }}">
+    @include('public.analytics')
 </head>
 <body class="call-body">
     <main
