@@ -3,8 +3,10 @@
 namespace App\Console\Commands;
 
 use App\Jobs\GenerateStaticAudio;
+use App\LocalAudioWorker;
 use App\Models\Avatar;
 use App\Models\ConversationVersion;
+use App\Services\ConversationTree;
 use App\Services\StaticAudioPublisher;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
@@ -17,7 +19,7 @@ class QueueStaticAudio extends Command
     /**
      * Execute the console command.
      */
-    public function handle(StaticAudioPublisher $publisher): int
+    public function handle(StaticAudioPublisher $publisher, ConversationTree $conversationTree, LocalAudioWorker $worker): int
     {
         $avatar = Avatar::query()->where('slug', $this->argument('avatar'))->first();
 
@@ -44,7 +46,8 @@ class QueueStaticAudio extends Command
 
         $assets = $version->audioAssets()
             ->whereIn('status', ['pending', 'failed'])
-            ->get();
+            ->get()
+            ->keyBy('asset_key');
 
         if ($assets->isEmpty()) {
             $this->warn('No hay audios pendientes para enviar a la cola.');
@@ -67,7 +70,25 @@ class QueueStaticAudio extends Command
             $avatar->update(['status' => 'generating']);
         }
 
-        $assets->each(fn ($asset) => GenerateStaticAudio::dispatch($asset->id));
+        foreach ($conversationTree->generationLines($version->tree) as $assetKey => $text) {
+            $asset = $assets->get($assetKey);
+            if (! $asset) {
+                continue;
+            }
+
+            if ($asset->status === 'failed') {
+                $asset->update(['status' => 'pending', 'error' => null]);
+            }
+            GenerateStaticAudio::dispatch($asset->id);
+        }
+
+        try {
+            $worker->start();
+        } catch (\RuntimeException $exception) {
+            $this->error("Los audios fueron encolados, pero no se pudo iniciar el worker local: {$exception->getMessage()}");
+
+            return self::FAILURE;
+        }
 
         $this->info("{$assets->count()} audios estáticos enviados a la cola para {$avatar->name}.");
 

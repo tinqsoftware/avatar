@@ -10,58 +10,96 @@ class StaticConversationService
     public function __construct(
         private readonly ConversationRouterService $router,
         private readonly ConversationTree $conversationTree,
+        private readonly ConversationCoverage $coverage,
     ) {}
 
     /** @return array<string, mixed> */
-    public function greeting(Avatar $avatar): array
+    public function greeting(Avatar $avatar, bool $preview = false): array
     {
-        $version = $this->version($avatar);
-        $state = $this->state($avatar);
+        $version = $this->version($avatar, $preview);
+        $state = $this->state($avatar, $preview);
         $reply = array_key_exists('greeting', $this->conversationTree->socialFamilies($version->tree))
             ? $this->line($avatar, $version, 'social', 'greeting', null, $state)
             : $this->line($avatar, $version, 'greeting', null, null, $state);
         $state['closed'] = false;
-        $this->storeState($avatar, $state);
+        $this->storeState($avatar, $state, $preview);
 
         return $reply;
     }
 
     /** @return array<string, mixed> */
-    public function respond(Avatar $avatar, string $transcript): array
+    public function respond(Avatar $avatar, string $transcript, bool $preview = false): array
     {
-        $version = $this->version($avatar);
-        $state = $this->state($avatar);
+        $version = $this->version($avatar, $preview);
+        $state = $this->state($avatar, $preview);
         $selection = $this->router->route($avatar, $version, $transcript, $state);
 
         if ($selection['status'] === 'queued') {
             $connector = $this->line($avatar, $version, 'connector', 'queue', null, $state);
-            $this->storeState($avatar, $state);
+            $this->storeState($avatar, $state, $preview);
 
             return ['status' => 'queued', 'ticket' => $selection['ticket'], 'connector' => $connector];
         }
 
-        return $this->selection($avatar, $version, $selection, $state);
+        return $this->selection($avatar, $version, $selection, $state, $preview);
     }
 
     /** @return array<string, mixed> */
-    public function poll(Avatar $avatar, string $ticket): array
+    public function poll(Avatar $avatar, string $ticket, bool $preview = false): array
     {
-        $version = $this->version($avatar);
-        $state = $this->state($avatar);
+        $version = $this->version($avatar, $preview);
+        $state = $this->state($avatar, $preview);
         $selection = $this->router->poll($version, $ticket, $state);
         if ($selection['status'] === 'queued') {
             return ['status' => 'queued'];
         }
 
-        return $this->selection($avatar, $version, $selection, $state);
+        return $this->selection($avatar, $version, $selection, $state, $preview);
     }
 
-    private function version(Avatar $avatar): ConversationVersion
+    public function canStart(Avatar $avatar, bool $preview = false): bool
     {
-        $version = $avatar->publishedConversation();
+        $version = $this->availableVersion($avatar, $preview);
+
+        if (! $version) {
+            return false;
+        }
+
+        $tree = $version->tree;
+        $key = array_key_exists('greeting', $this->conversationTree->socialFamilies($tree))
+            ? 'social.greeting.0'
+            : 'greeting.0';
+
+        return $version->audioAssets()->where('asset_key', $key)->where('status', 'ready')->exists();
+    }
+
+    private function version(Avatar $avatar, bool $preview): ConversationVersion
+    {
+        $version = $this->availableVersion($avatar, $preview);
         abort_unless($version, 503, 'Este avatar todavía está preparando sus respuestas.');
 
+        $version->loadMissing('audioAssets');
+
         return $version;
+    }
+
+    private function availableVersion(Avatar $avatar, bool $preview): ?ConversationVersion
+    {
+        $stagingVersion = $avatar->conversationVersions()
+            ->whereIn('status', ['staging', 'published'])
+            ->latest('id')
+            ->first();
+
+        if ($preview || ! $stagingVersion) {
+            return $preview ? $stagingVersion : $avatar->publishedConversation();
+        }
+
+        $progress = $this->coverage->summarize($stagingVersion);
+        if ($progress['topics_total'] > 0 && $progress['topics_covered'] === $progress['topics_total']) {
+            return $stagingVersion;
+        }
+
+        return $avatar->publishedConversation();
     }
 
     /**
@@ -69,11 +107,11 @@ class StaticConversationService
      * @param  array<string, mixed>  $state
      * @return array<string, mixed>
      */
-    private function selection(Avatar $avatar, ConversationVersion $version, array $selection, array $state): array
+    private function selection(Avatar $avatar, ConversationVersion $version, array $selection, array $state, bool $preview): array
     {
         if ($selection['status'] !== 'ready' || ! is_array($selection['items'] ?? null) || $selection['items'] === []) {
             $reply = $this->line($avatar, $version, 'fallback', null, null, $state);
-            $this->storeState($avatar, $state);
+            $this->storeState($avatar, $state, $preview);
 
             return $reply;
         }
@@ -87,7 +125,7 @@ class StaticConversationService
 
         if ($items->isEmpty()) {
             $reply = $this->line($avatar, $version, 'fallback', null, null, $state);
-            $this->storeState($avatar, $state);
+            $this->storeState($avatar, $state, $preview);
 
             return $reply;
         }
@@ -132,7 +170,7 @@ class StaticConversationService
             $state['last_topic_ids'] = $topicItems->pluck('topic_id')->all();
             $state['closed'] = false;
         }
-        $this->storeState($avatar, $state);
+        $this->storeState($avatar, $state, $preview);
 
         return [
             'status' => 'ready',
@@ -186,9 +224,25 @@ class StaticConversationService
             $prefix = $kind;
         }
 
-        $index = $this->nextVariant($prefix, count($variants), $state);
+        $availableIndexes = collect($variants)
+            ->keys()
+            ->filter(fn (int $index): bool => $version->audioAssets->contains(fn ($asset): bool => $asset->asset_key === "{$prefix}.{$index}" && $asset->status === 'ready'))
+            ->values()
+            ->all();
+        if ($availableIndexes === [] && $version->status === 'published') {
+            $availableIndexes = array_keys($variants);
+        }
+        if ($availableIndexes === []) {
+            if ($kind !== 'fallback') {
+                return $this->line($avatar, $version, 'fallback', null, null, $state);
+            }
+
+            abort(503, 'El primer audio de prueba todavía está preparándose.');
+        }
+
+        $index = $this->nextVariant($prefix, $availableIndexes, $state);
         $key = "{$prefix}.{$index}";
-        $asset = $version->audioAssets()->where('asset_key', $key)->first();
+        $asset = $version->audioAssets->firstWhere('asset_key', $key);
 
         return [
             'text' => $variants[$index],
@@ -200,32 +254,36 @@ class StaticConversationService
     }
 
     /** @param array<string, mixed> $state */
-    private function nextVariant(string $prefix, int $count, array &$state): int
+    /** @param list<int> $availableIndexes */
+    private function nextVariant(string $prefix, array $availableIndexes, array &$state): int
     {
         $last = $state['variants'][$prefix] ?? null;
-        $index = is_int($last) ? ($last + 1) % $count : random_int(0, $count - 1);
+        $position = is_int($last) ? array_search($last, $availableIndexes, true) : false;
+        $index = $position === false
+            ? $availableIndexes[array_rand($availableIndexes)]
+            : $availableIndexes[($position + 1) % count($availableIndexes)];
         $state['variants'][$prefix] = $index;
 
         return $index;
     }
 
     /** @return array<string, mixed> */
-    private function state(Avatar $avatar): array
+    private function state(Avatar $avatar, bool $preview): array
     {
-        $state = session()->get($this->stateKey($avatar), []);
+        $state = session()->get($this->stateKey($avatar, $preview), []);
 
         return is_array($state) ? $state : [];
     }
 
     /** @param array<string, mixed> $state */
-    private function storeState(Avatar $avatar, array $state): void
+    private function storeState(Avatar $avatar, array $state, bool $preview): void
     {
-        session()->put($this->stateKey($avatar), $state);
+        session()->put($this->stateKey($avatar, $preview), $state);
     }
 
-    private function stateKey(Avatar $avatar): string
+    private function stateKey(Avatar $avatar, bool $preview): string
     {
-        return "avatar-call.{$avatar->id}";
+        return "avatar-call.{$avatar->id}.".($preview ? 'preview' : 'published');
     }
 
     /**

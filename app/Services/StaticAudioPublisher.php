@@ -65,15 +65,28 @@ class StaticAudioPublisher
         $asset->update([
             'path' => $path,
             'duration_ms' => $duration,
-            'visemes' => $this->visemeTimeline->fromWords($words, $duration),
+            'visemes' => $this->visemes($words, $asset->text, $duration),
             'status' => 'ready',
             'error' => null,
         ]);
     }
 
+    /**
+     * @param  array<int, array<string, mixed>>  $words
+     * @return array<int, array{at_ms:int,value:int}>
+     */
+    private function visemes(array $words, string $text, int $duration): array
+    {
+        $visemes = $this->visemeTimeline->fromWords($words, $duration);
+
+        return count($visemes) > 2 ? $visemes : $this->visemeTimeline->fromText($text, $duration);
+    }
+
     /** @return array{bytes: string, duration_ms: int, words: array<int, array<string, mixed>>} */
     public function synthesize(Avatar $avatar, string $text, ?int $assetId = null): array
     {
+        $this->extendExecutionWindow();
+
         $request = Http::acceptJson()
             ->connectTimeout(5)
             ->timeout(config('avatar.voicebox_timeout_seconds'))
@@ -107,13 +120,30 @@ class StaticAudioPublisher
         return $this->responsePayload($response);
     }
 
+    private function extendExecutionWindow(): void
+    {
+        $timeout = (int) config('avatar.voicebox_timeout_seconds');
+
+        if ($timeout > 0 && function_exists('set_time_limit')) {
+            set_time_limit($timeout + 10);
+        }
+    }
+
     /** @return array{bytes: string, duration_ms: int, words: array<int, array<string, mixed>>} */
     private function responsePayload(Response $response): array
     {
+        if ($response->status() === 401) {
+            throw new RuntimeException('Voicebox local rechazó la conexión. Reinicia el servicio local e inténtalo nuevamente.');
+        }
+
+        if (! $response->successful()) {
+            throw new RuntimeException('Voicebox local no pudo generar esta prueba. Inténtalo nuevamente.');
+        }
+
         $audio = $response->json('audio_base64');
         $duration = $response->json('duration_ms');
         $words = $response->json('words');
-        if (! $response->successful() || ! is_string($audio) || ! is_int($duration) || ! is_array($words)) {
+        if (! is_string($audio) || ! is_int($duration) || ! is_array($words)) {
             throw new RuntimeException('Voicebox no devolvió un audio publicable.');
         }
 

@@ -22,11 +22,15 @@ class AudioAsset extends Model
         'visemes',
         'status',
         'error',
+        'synced_at',
     ];
 
     protected function casts(): array
     {
-        return ['visemes' => 'array'];
+        return [
+            'visemes' => 'array',
+            'synced_at' => 'datetime',
+        ];
     }
 
     public function conversationVersion(): BelongsTo

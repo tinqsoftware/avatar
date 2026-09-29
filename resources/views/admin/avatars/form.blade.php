@@ -14,7 +14,7 @@
             <div><h2 id="voiceSetupTitle">Voz para el estudio local</h2><p>Elige cómo se generarán los MP3. Las muestras privadas se cargan después, en el Estudio de audio.</p></div>
             <label>Tipo de voz<select name="voice_mode" id="voiceMode"><option value="synthetic" @selected($voiceMode === 'synthetic')>Sintética instalada</option><option value="cloned" @selected($voiceMode === 'cloned')>Clonada con mis muestras</option></select></label>
             <section data-voice-profile @if($voiceMode === 'cloned') hidden @endif><label>Perfil sintético<select name="voice_profile" data-voice-profile-select @disabled($voiceMode === 'cloned')><option value="anita" @selected(old('voice_profile', $avatar->voice_profile) === 'anita')>Anita</option></select></label><p class="field-hint">Una voz ya disponible en Voicebox local.</p></section>
-            <section data-voice-sample-note @if($voiceMode !== 'cloned') hidden @endif><p class="field-hint">Luego carga de 1 a 3 clips del mismo locutor, que sumen 20 a 30 segundos de español peruano limpio. Permanecen solo en esta Mac y podrás oír cinco pruebas antes del lote.</p></section>
+            <section data-voice-sample-note @if($voiceMode !== 'cloned') hidden @endif><p class="field-hint">Luego carga de 1 a 3 clips del mismo locutor en español peruano limpio. No hay límite de duración; una voz clara, sin ruido ni música dará mejores resultados. Permanecen solo en esta Mac y podrás oír cinco pruebas antes del lote.</p></section>
         </section>
     @else
         <section class="voice-setup"><h2>Entrega de audio</h2><p>Este VPS no guarda muestras ni genera voces. Recibe MP3, visemas y el árbol validados desde el Estudio local.</p></section>

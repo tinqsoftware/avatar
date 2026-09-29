@@ -12,7 +12,7 @@ return [
     // Salad puede tardar algo más de un segundo en atravesar la red; este
     // límite solo comprueba salud, no envía texto ni audio.
     'voicebox_health_timeout_seconds' => (int) env('AVATAR_VOICEBOX_HEALTH_TIMEOUT_SECONDS', 5),
-    'voicebox_timeout_seconds' => (int) env('AVATAR_VOICEBOX_TIMEOUT_SECONDS', 30),
+    'voicebox_timeout_seconds' => (int) env('AVATAR_VOICEBOX_TIMEOUT_SECONDS', 120),
     'voicebox_synthetic_speech_path' => env('AVATAR_VOICEBOX_SYNTHETIC_SPEECH_PATH', '/v1/anita/speech'),
     'voicebox_clone_speech_path' => env('AVATAR_VOICEBOX_CLONE_SPEECH_PATH', '/v1/cloned/speech'),
     'voicebox_synthetic_reference_path' => env('AVATAR_VOICEBOX_SYNTHETIC_REFERENCE_PATH', storage_path('app/private/voice-references/anita.wav')),

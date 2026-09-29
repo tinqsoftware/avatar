@@ -127,6 +127,88 @@ class ConversationTree
     }
 
     /**
+     * Ordena la generación por ronda: la variante 1 de todas las familias
+     * queda disponible antes de iniciar la variante 2.
+     *
+     * @param  array<string, mixed>  $tree
+     * @return array<string, string>
+     */
+    public function generationLines(array $tree): array
+    {
+        $families = [
+            'greeting' => $tree['greeting']['variants'],
+            'fallback' => $tree['fallback']['variants'],
+        ];
+
+        foreach ($this->socialFamilies($tree) as $intent => $social) {
+            $families["social.{$intent}"] = $social['variants'];
+        }
+        foreach ($this->connectorFamilies($tree) as $family => $variants) {
+            $families["connector.{$family}"] = $variants;
+        }
+        $lines = [];
+        $rounds = max(array_map('count', $families));
+        foreach ($tree['topics'] as $topic) {
+            foreach (['summary', 'detail', 'next'] as $stage) {
+                $rounds = max($rounds, count($topic[$stage]['variants']));
+            }
+        }
+
+        for ($index = 0; $index < $rounds; $index++) {
+            foreach ($families as $prefix => $variants) {
+                if (array_key_exists($index, $variants)) {
+                    $lines["{$prefix}.{$index}"] = $variants[$index];
+                }
+            }
+            foreach (['summary', 'detail', 'next'] as $stage) {
+                foreach ($tree['topics'] as $topic) {
+                    if (array_key_exists($index, $topic[$stage]['variants'])) {
+                        $lines["topic.{$topic['id']}.{$stage}.{$index}"] = $topic[$stage]['variants'][$index];
+                    }
+                }
+            }
+        }
+
+        return $lines;
+    }
+
+    /**
+     * Reemplaza una sola línea aprobada del árbol sin alterar las demás.
+     *
+     * @param  array<string, mixed>  $tree
+     * @return array<string, mixed>
+     */
+    public function replaceLine(array $tree, string $assetKey, string $text): array
+    {
+        $tree = $this->validate($tree);
+        $text = trim($text);
+        if ($text === '' || mb_strlen($text) > 900) {
+            throw new InvalidArgumentException('La frase debe tener entre 1 y 900 caracteres.');
+        }
+
+        $parts = explode('.', $assetKey);
+        $variant = isset($parts[count($parts) - 1]) ? (int) $parts[count($parts) - 1] : -1;
+
+        if (in_array($parts[0] ?? null, ['greeting', 'fallback'], true) && count($parts) === 2 && array_key_exists($variant, $tree[$parts[0]]['variants'])) {
+            $tree[$parts[0]]['variants'][$variant] = $text;
+        } elseif (($parts[0] ?? null) === 'connector' && count($parts) === 3 && isset($tree['connectors'][$parts[1]]['variants'][$variant])) {
+            $tree['connectors'][$parts[1]]['variants'][$variant] = $text;
+        } elseif (($parts[0] ?? null) === 'social' && count($parts) === 3 && isset($tree['social'][$parts[1]]['variants'][$variant])) {
+            $tree['social'][$parts[1]]['variants'][$variant] = $text;
+        } elseif (($parts[0] ?? null) === 'topic' && count($parts) === 4 && isset($tree['topics'])) {
+            $topicIndex = collect($tree['topics'])->search(fn (array $topic): bool => $topic['id'] === $parts[1]);
+            if ($topicIndex === false || ! in_array($parts[2], ['summary', 'detail', 'next'], true) || ! isset($tree['topics'][$topicIndex][$parts[2]]['variants'][$variant])) {
+                throw new InvalidArgumentException('La frase indicada no existe en el árbol.');
+            }
+            $tree['topics'][$topicIndex][$parts[2]]['variants'][$variant] = $text;
+        } else {
+            throw new InvalidArgumentException('La frase indicada no existe en el árbol.');
+        }
+
+        return $this->validate($tree);
+    }
+
+    /**
      * @return array<string, list<string>>
      */
     public function connectorFamilies(array $tree): array

@@ -22,6 +22,11 @@
         microphone: document.getElementById('microphoneButton'),
         start: document.getElementById('startConversation'),
         timer: document.getElementById('recordingTimer'),
+        buildProgress: document.getElementById('buildProgress'),
+        buildProgressRing: document.getElementById('buildProgressRing'),
+        buildProgressPercent: document.getElementById('buildProgressPercent'),
+        buildTopicsProgress: document.getElementById('buildTopicsProgress'),
+        buildVariantsProgress: document.getElementById('buildVariantsProgress'),
     };
 
     let audioContext;
@@ -62,6 +67,45 @@
     const setHint = (text) => {
         ui.hint.textContent = text;
         ui.hint.classList.toggle('has-message', Boolean(text));
+    };
+
+    const showBuildProgress = (progress) => {
+        if (!progress || !ui.buildProgress) {
+            return;
+        }
+
+        if (progress.complete) {
+            ui.buildProgress.hidden = true;
+
+            return;
+        }
+
+        const totalPercent = Number(progress.total_percent) || 0;
+        const topicsPercent = Number(progress.topics_percent) || 0;
+        const rounds = Array.isArray(progress.variant_rounds) ? progress.variant_rounds : [];
+        const completedRounds = rounds.filter((round) => round.complete).length;
+        const currentRound = rounds.find((round) => !round.complete);
+        const roundLabel = currentRound
+            ? `Variantes: ${completedRounds}/${rounds.length} completas · ronda ${currentRound.number}: ${currentRound.ready}/${currentRound.total}`
+            : `Variantes: ${completedRounds}/${rounds.length} completas`;
+
+        ui.buildProgress.hidden = false;
+        ui.buildProgressRing.style.setProperty('--progress', `${Math.max(0, Math.min(100, totalPercent)) * 3.6}deg`);
+        ui.buildProgressPercent.textContent = `${totalPercent}%`;
+        ui.buildTopicsProgress.textContent = `Cobertura temática: ${topicsPercent}% · ${progress.topics_covered}/${progress.topics_total}`;
+        ui.buildVariantsProgress.textContent = `${roundLabel} · ${progress.ready_assets}/${progress.total_assets} MP3`;
+    };
+
+    const refreshBuildProgress = async () => {
+        try {
+            const status = await request(config.statusUrl);
+            showBuildProgress(status.progress);
+            if (status.progress && !status.progress.complete) {
+                window.setTimeout(refreshBuildProgress, 10000);
+            }
+        } catch (_) {
+            // The current call keeps working even if a progress refresh fails.
+        }
     };
 
     const addBubble = (speaker, text) => {
@@ -639,8 +683,12 @@
 
     Promise.all([setupRive(), request(config.statusUrl)])
         .then(([_, status]) => {
+            showBuildProgress(status.progress);
+            if (status.progress && !status.progress.complete) {
+                window.setTimeout(refreshBuildProgress, 10000);
+            }
             if (!status.ready) {
-                throw new Error('El contenido publicado no está listo.');
+                throw new Error('Aún se está preparando el saludo inicial. Esta pantalla se habilitará automáticamente al recibirlo.');
             }
 
             ready = true;

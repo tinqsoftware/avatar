@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreConversationVersionRequest;
 use App\Jobs\GenerateStaticAudio;
+use App\LocalAudioWorker;
 use App\Models\Avatar;
 use App\Models\ConversationVersion;
 use App\Services\ConversationTree;
@@ -13,6 +14,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 use InvalidArgumentException;
+use RuntimeException;
 
 class ConversationVersionController extends Controller
 {
@@ -40,7 +42,7 @@ class ConversationVersionController extends Controller
         return redirect()->route('admin.avatars.show', $avatar)->with('success', "Versión {$version->label} guardada como borrador.");
     }
 
-    public function publish(Avatar $avatar, ConversationVersion $version, ConversationTree $conversationTree): RedirectResponse
+    public function publish(Avatar $avatar, ConversationVersion $version, ConversationTree $conversationTree, LocalAudioWorker $worker): RedirectResponse
     {
         abort_unless(config('avatar.audio_role') === 'studio', 404);
         abort_unless($version->avatar_id === $avatar->id, 404);
@@ -56,7 +58,7 @@ class ConversationVersionController extends Controller
 
         DB::transaction(function () use ($avatar, $version, $conversationTree): void {
             $version->audioAssets()->delete();
-            foreach ($conversationTree->lines($version->tree) as $key => $text) {
+            foreach ($conversationTree->generationLines($version->tree) as $key => $text) {
                 $asset = $version->audioAssets()->create(['asset_key' => $key, 'text' => $text]);
                 GenerateStaticAudio::dispatch($asset->id)->afterCommit();
             }
@@ -66,7 +68,50 @@ class ConversationVersionController extends Controller
             }
         });
 
-        return back()->with('success', 'El lote se está generando en el estudio local. Se habilitará el envío al VPS cuando todos estén listos.');
+        try {
+            $worker->start();
+        } catch (RuntimeException $exception) {
+            return back()->withErrors(['publish' => "El lote quedó preparado, pero no se pudo iniciar el worker local: {$exception->getMessage()}"]);
+        }
+
+        return back()->with('success', 'El lote se está generando en esta Mac. El worker se apagará solo al terminar todos los MP3.');
+    }
+
+    public function resume(Avatar $avatar, ConversationVersion $version, ConversationTree $conversationTree, LocalAudioWorker $worker): RedirectResponse
+    {
+        abort_unless(config('avatar.audio_role') === 'studio', 404);
+        abort_unless($version->avatar_id === $avatar->id, 404);
+
+        $assets = $version->audioAssets()
+            ->whereIn('status', ['pending', 'failed'])
+            ->get()
+            ->keyBy('asset_key');
+        foreach ($conversationTree->generationLines($version->tree) as $assetKey => $text) {
+            $asset = $assets->get($assetKey);
+            if (! $asset) {
+                continue;
+            }
+
+            if ($asset->status === 'failed') {
+                $asset->update(['status' => 'pending', 'error' => null]);
+            }
+            GenerateStaticAudio::dispatch($asset->id);
+        }
+
+        if ($version->audioAssets()->where('status', '!=', 'ready')->exists()) {
+            $version->update(['status' => 'generating', 'published_at' => null]);
+            if (! $avatar->publishedConversation()) {
+                $avatar->update(['status' => 'generating']);
+            }
+        }
+
+        try {
+            $worker->start();
+        } catch (RuntimeException $exception) {
+            return back()->withErrors(['resume' => "El lote sigue guardado, pero no se pudo iniciar el worker local: {$exception->getMessage()}"]);
+        }
+
+        return back()->with('success', 'Lote reanudado. Los MP3 ya listos se conservan y el worker se apagará al finalizar.');
     }
 
     public function show(Avatar $avatar, ConversationVersion $version): View

@@ -10,7 +10,7 @@
 <section class="section-heading"><h2>Versiones conversacionales</h2><p>{{ $studio ? 'El estudio genera localmente; el VPS nunca recibe muestras privadas.' : 'Checksums verificados antes de cualquier publicación.' }}</p></section>
 <div class="version-list">
 @forelse($avatar->conversationVersions as $version)
-    <article class="card version-row"><div><strong>{{ $version->label }}</strong><span class="status {{ $version->status }}">{{ $version->status }}</span><small>{{ $version->audio_assets_count }} audios · {{ optional($version->published_at)->format('d/m/Y H:i') ?? 'pendiente de entrega' }}</small></div><div class="actions"><a class="text-link" href="{{ route('admin.versions.show', [$avatar, $version]) }}">Ver</a>@if($studio)<a class="button small" href="{{ route('admin.audio-studio.show', $avatar) }}">Gestionar en estudio</a>@endif</div></article>
+    <article class="card version-row"><div><strong>{{ $version->label }}</strong><span class="status {{ $version->status }}">{{ $version->status }}</span><small>{{ $version->audio_assets_count }}{{ $version->expected_audio_assets_count ? ' / '.$version->expected_audio_assets_count : '' }} audios · {{ optional($version->published_at)->format('d/m/Y H:i') ?? 'pendiente de entrega' }}</small></div><div class="actions"><a class="text-link" href="{{ route('admin.versions.show', [$avatar, $version]) }}">Ver</a>@if($studio)<a class="button small" href="{{ route('admin.audio-studio.show', $avatar) }}">Gestionar en estudio</a>@endif</div></article>
 @empty <div class="empty">{{ $studio ? 'Crea el avatar y carga su árbol dentro del Estudio de audio.' : 'Aún no se recibió un paquete de audio para este avatar.' }}</div>
 @endforelse
 </div>

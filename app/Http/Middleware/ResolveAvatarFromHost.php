@@ -26,11 +26,27 @@ class ResolveAvatarFromHost
 
         abort_unless(is_string($slug) && preg_match('/^[a-z0-9-]+$/', $slug) === 1, 404);
 
-        $avatar = Avatar::where('slug', $slug)->where('status', 'published')->first();
-        abort_unless($avatar, 404);
+        $avatar = Avatar::where('slug', $slug)->first();
+        if (! $avatar) {
+            if ($this->isStudioRoot($request, $host)) {
+                return redirect()->route('admin.audio-studio.index');
+            }
+
+            abort(404);
+        }
 
         $request->attributes->set('avatar', $avatar);
 
         return $next($request);
+    }
+
+    private function isStudioRoot(Request $request, string $host): bool
+    {
+        $applicationHost = parse_url((string) config('app.url'), PHP_URL_HOST);
+
+        return config('avatar.audio_role') === 'studio'
+            && $request->is('/')
+            && is_string($applicationHost)
+            && strtolower($applicationHost) === $host;
     }
 }

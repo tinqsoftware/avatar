@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Models\AudioAsset;
+use App\Services\IncrementalAudioSync;
 use App\Services\StaticAudioPublisher;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -28,7 +29,7 @@ class GenerateStaticAudio implements ShouldBeUnique, ShouldQueue
     /**
      * Execute the job.
      */
-    public function handle(StaticAudioPublisher $publisher): void
+    public function handle(StaticAudioPublisher $publisher, IncrementalAudioSync $sync): void
     {
         $asset = AudioAsset::with('conversationVersion.avatar')->find($this->audioAssetId);
         if (! $asset || $asset->status === 'ready') {
@@ -39,6 +40,8 @@ class GenerateStaticAudio implements ShouldBeUnique, ShouldQueue
 
         try {
             $publisher->publish($asset);
+            $asset->refresh();
+            $sync->syncAvailable($asset->conversationVersion);
         } catch (Throwable) {
             $asset->update([
                 'status' => 'failed',

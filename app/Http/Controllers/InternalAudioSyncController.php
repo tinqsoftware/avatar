@@ -46,7 +46,7 @@ class InternalAudioSyncController extends Controller
             'avatar' => $result['avatar']->slug,
             'version' => $result['version']->id,
             'asset_count' => $result['asset_count'],
-            'status' => 'published',
+            'status' => $result['version']->status,
         ], 201);
     }
 

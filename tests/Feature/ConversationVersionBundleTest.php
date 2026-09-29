@@ -66,6 +66,33 @@ class ConversationVersionBundleTest extends TestCase
         $this->assertSame(1, ConversationVersion::where('avatar_id', $source->avatar_id)->where('status', 'published')->count());
     }
 
+    public function test_imports_incremental_five_audio_chunks_and_publishes_only_after_the_last_chunk(): void
+    {
+        Storage::fake('public');
+        Storage::fake('local');
+        [, $source] = $this->readyVersion('source-juanito');
+        $delivery = Avatar::factory()->create(['slug' => 'juanito-ica', 'status' => 'draft']);
+        $assets = $source->audioAssets()->orderBy('id')->get();
+
+        foreach ($assets->chunk(5) as $chunkIndex => $chunk) {
+            $archive = Storage::disk('local')->path("avatar-exports/chunk-{$chunkIndex}.zip");
+            app(ConversationVersionBundle::class)->exportIncremental($source, $chunk, $archive, $delivery->slug);
+            $result = app(ConversationVersionBundle::class)->import($archive);
+            $version = $result['version']->fresh();
+
+            if ($chunkIndex < $assets->chunk(5)->count() - 1) {
+                $this->assertSame('staging', $version->status);
+                $this->assertSame(0, $delivery->conversationVersions()->where('status', 'published')->count());
+            }
+        }
+
+        $published = $delivery->fresh()->publishedConversation();
+        $this->assertNotNull($published);
+        $this->assertSame($assets->count(), $published->audioAssets()->where('status', 'ready')->count());
+        $this->assertSame($assets->count(), $published->expected_audio_assets_count);
+        $this->assertSame('source-juanito:'.$source->id, $published->sync_key);
+    }
+
     /** @return array{Avatar, ConversationVersion} */
     private function readyVersion(string $slug = 'ica-demo'): array
     {

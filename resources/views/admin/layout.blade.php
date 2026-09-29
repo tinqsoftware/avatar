@@ -11,7 +11,12 @@
 <header class="platform-header">
     <a href="{{ route('admin.avatars.index') }}" class="platform-brand">✦ AVATAR IA</a>
     @auth
-        <form method="POST" action="{{ route('admin.logout') }}">@csrf<button class="link-button" type="submit">Cerrar sesión</button></form>
+        <div class="actions">
+            @if (config('avatar.audio_role') === 'studio')
+                <a class="link-button" href="{{ route('admin.audio-studio.index') }}">Estudio de audio</a>
+            @endif
+            <form method="POST" action="{{ route('admin.logout') }}">@csrf<button class="link-button" type="submit">Cerrar sesión</button></form>
+        </div>
     @endauth
 </header>
 <main class="platform-main">
@@ -19,5 +24,6 @@
     @if ($errors->any())<div class="flash error"><strong>Revisa lo siguiente:</strong><ul>@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif
     @yield('content')
 </main>
+@stack('scripts')
 </body>
 </html>

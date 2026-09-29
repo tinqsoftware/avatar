@@ -50,6 +50,33 @@ class PublicAvatarCallTest extends TestCase
             ->assertNotFound();
     }
 
+    public function test_preview_exposes_incremental_coverage_and_plays_only_ready_audio(): void
+    {
+        [$avatar, $version] = $this->publishedAvatar();
+        $avatar->update(['status' => 'draft']);
+        $version->update(['status' => 'staging', 'published_at' => null, 'expected_audio_assets_count' => 18, 'sync_key' => 'source:1']);
+        AudioAsset::factory()->create([
+            'conversation_version_id' => $version->id,
+            'asset_key' => 'social.greeting.0',
+            'text' => 'Hola, qué gusto conversar contigo.',
+            'path' => 'avatars/ica-demo/preview.mp3',
+            'duration_ms' => 1000,
+            'visemes' => [['at_ms' => 0, 'value' => 0]],
+            'status' => 'ready',
+        ]);
+
+        $this->getJson('/prueba/asistente/estado')
+            ->assertOk()
+            ->assertJsonPath('ready', true)
+            ->assertJsonPath('preview', true)
+            ->assertJsonPath('progress.ready_assets', 1)
+            ->assertJsonPath('progress.topics_covered', 0);
+
+        $this->postJson('/prueba/asistente/saludo')
+            ->assertOk()
+            ->assertJsonPath('audio_url', '/storage/avatars/ica-demo/preview.mp3');
+    }
+
     public function test_call_requires_an_explicit_user_action_before_audio_can_start(): void
     {
         $this->publishedAvatar();

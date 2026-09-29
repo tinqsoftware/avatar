@@ -25,6 +25,8 @@ class AvatarController extends Controller
      */
     public function create(): View
     {
+        $this->ensureDelivery();
+
         return view('admin.avatars.form', ['avatar' => new Avatar]);
     }
 
@@ -33,6 +35,7 @@ class AvatarController extends Controller
      */
     public function store(StoreAvatarRequest $request): RedirectResponse
     {
+        $this->ensureDelivery();
         $avatar = Avatar::create($this->attributes($request));
 
         $message = config('avatar.audio_role') === 'studio'
@@ -57,6 +60,8 @@ class AvatarController extends Controller
      */
     public function edit(Avatar $avatar): View
     {
+        $this->ensureDelivery();
+
         return view('admin.avatars.form', compact('avatar'));
     }
 
@@ -65,6 +70,7 @@ class AvatarController extends Controller
      */
     public function update(UpdateAvatarRequest $request, Avatar $avatar): RedirectResponse
     {
+        $this->ensureDelivery();
         $avatar->update($this->attributes($request, $avatar));
 
         return redirect()->route('admin.avatars.show', $avatar)->with('success', 'Avatar actualizado.');
@@ -75,6 +81,7 @@ class AvatarController extends Controller
      */
     public function destroy(Avatar $avatar): RedirectResponse
     {
+        $this->ensureDelivery();
         $avatar->delete();
 
         return redirect()->route('admin.avatars.index')->with('success', 'Avatar eliminado.');
@@ -132,5 +139,10 @@ class AvatarController extends Controller
         }
 
         return $attributes;
+    }
+
+    private function ensureDelivery(): void
+    {
+        abort_unless(config('avatar.audio_role') === 'delivery', 404);
     }
 }

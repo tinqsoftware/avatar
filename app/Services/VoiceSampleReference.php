@@ -11,34 +11,11 @@ use RuntimeException;
 
 class VoiceSampleReference
 {
-    private const MIN_TOTAL_DURATION_MS = 20_000;
-
-    private const MAX_TOTAL_DURATION_MS = 30_000;
-
-    /**
-     * @param  array<int, UploadedFile>  $files
-     */
-    public function assertValid(array $files): void
-    {
-        $total = 0;
-        foreach ($files as $file) {
-            $total += $this->duration($file->getRealPath());
-        }
-
-        if ($total < self::MIN_TOTAL_DURATION_MS || $total > self::MAX_TOTAL_DURATION_MS) {
-            throw ValidationException::withMessages([
-                'samples' => 'Las muestras deben sumar entre 20 y 30 segundos de voz limpia.',
-            ]);
-        }
-    }
-
     /**
      * @param  array<int, UploadedFile>  $files
      */
     public function replace(Avatar $avatar, array $files): void
     {
-        $this->assertValid($files);
-
         $this->clear($avatar);
 
         foreach ($files as $file) {

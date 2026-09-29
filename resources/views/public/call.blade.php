@@ -15,11 +15,11 @@
     <main
         id="callShell"
         class="call-shell"
-        data-status-url="{{ route('avatar.status') }}"
-        data-greeting-url="{{ route('avatar.greeting') }}"
-        data-message-url="{{ route('avatar.message') }}"
-        data-poll-url="{{ url('/asistente/respuestas/:ticket') }}"
-        data-rive-url="{{ asset($avatar->rive_path ?: 'assets/avatar/anita.riv') }}"
+        data-status-url="{{ $preview ? route('avatar.preview.status') : route('avatar.status') }}"
+        data-greeting-url="{{ $preview ? route('avatar.preview.greeting') : route('avatar.greeting') }}"
+        data-message-url="{{ $preview ? route('avatar.preview.message') : route('avatar.message') }}"
+        data-poll-url="{{ $preview ? url('/prueba/asistente/respuestas/:ticket') : url('/asistente/respuestas/:ticket') }}"
+        data-rive-url="{{ $riveUrl }}"
         data-avatar-name="{{ $avatar->name }}"
     >
         <section class="call-stage">
@@ -32,6 +32,11 @@
             <div class="chat-panel">
                 <div id="chat" class="conversation" aria-live="polite" aria-relevant="additions text"></div>
             </div>
+
+            <aside id="buildProgress" class="build-progress" hidden aria-live="polite">
+                <div id="buildProgressRing" class="build-progress__ring" style="--progress:0deg"><strong id="buildProgressPercent">0%</strong><span>total</span></div>
+                <div class="build-progress__copy"><b id="buildTopicsProgress">Cobertura: 0 / 0 temas</b><small id="buildVariantsProgress">Variantes: aún preparando</small></div>
+            </aside>
 
             <div class="avatar-area">
                 <div class="avatar-halo"></div>
