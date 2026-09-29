@@ -73,6 +73,24 @@ class StaticConversationService
         return $version->audioAssets()->where('asset_key', $key)->where('status', 'ready')->exists();
     }
 
+    /** @return list<string> */
+    public function topicTitles(Avatar $avatar, bool $preview = false): array
+    {
+        $version = $this->availableVersion($avatar, $preview);
+        $topics = $version?->tree['topics'] ?? [];
+
+        if (! is_array($topics)) {
+            return [];
+        }
+
+        return collect($topics)
+            ->pluck('title')
+            ->filter(fn (mixed $title): bool => is_string($title) && trim($title) !== '')
+            ->map(fn (string $title): string => trim($title))
+            ->values()
+            ->all();
+    }
+
     private function version(Avatar $avatar, bool $preview): ConversationVersion
     {
         $version = $this->availableVersion($avatar, $preview);

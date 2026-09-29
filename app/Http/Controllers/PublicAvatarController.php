@@ -16,14 +16,14 @@ class PublicAvatarController extends Controller
         return view('public.landing', ['avatar' => $this->avatar($request)]);
     }
 
-    public function call(Request $request): View
+    public function call(Request $request, StaticConversationService $conversation): View
     {
-        return $this->callView($request, false);
+        return $this->callView($request, $conversation, false);
     }
 
-    public function previewCall(Request $request): View
+    public function previewCall(Request $request, StaticConversationService $conversation): View
     {
-        return $this->callView($request, true);
+        return $this->callView($request, $conversation, true);
     }
 
     public function status(Request $request, StaticConversationService $conversation, ConversationCoverage $coverage): JsonResponse
@@ -60,7 +60,7 @@ class PublicAvatarController extends Controller
         return response()->json($conversation->poll($this->avatar($request), $ticket, true));
     }
 
-    private function callView(Request $request, bool $preview): View
+    private function callView(Request $request, StaticConversationService $conversation, bool $preview): View
     {
         $avatar = $this->avatar($request);
 
@@ -69,6 +69,7 @@ class PublicAvatarController extends Controller
             'preview' => $preview,
             'backgroundUrl' => $this->publicStorageUrl($avatar->background_path),
             'riveUrl' => $this->publicStorageUrl($avatar->rive_path) ?? asset('assets/avatar/anita.riv'),
+            'topicTitles' => $conversation->topicTitles($avatar, $preview),
         ]);
     }
 

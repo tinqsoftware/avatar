@@ -27,7 +27,22 @@
         buildProgressPercent: document.getElementById('buildProgressPercent'),
         buildTopicsProgress: document.getElementById('buildTopicsProgress'),
         buildVariantsProgress: document.getElementById('buildVariantsProgress'),
+        topicPromptTitle: document.getElementById('topicPromptTitle'),
     };
+
+    const topicTitles = (() => {
+        const titles = document.getElementById('topicPromptTitles');
+
+        if (!titles) {
+            return [];
+        }
+
+        try {
+            return JSON.parse(titles.textContent).filter((title) => typeof title === 'string' && title.trim() !== '');
+        } catch (_) {
+            return [];
+        }
+    })();
 
     let audioContext;
     let currentPlayback;
@@ -45,6 +60,31 @@
     let conversationStarted = false;
 
     const csrf = document.querySelector('meta[name="csrf-token"]')?.content;
+
+    const startTopicPrompt = () => {
+        if (!ui.topicPromptTitle || topicTitles.length < 2) {
+            return;
+        }
+
+        const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        let topicIndex = 0;
+
+        window.setInterval(() => {
+            topicIndex = (topicIndex + 1) % topicTitles.length;
+
+            if (reducedMotion) {
+                ui.topicPromptTitle.textContent = topicTitles[topicIndex];
+
+                return;
+            }
+
+            ui.topicPromptTitle.classList.add('is-changing');
+            window.setTimeout(() => {
+                ui.topicPromptTitle.textContent = topicTitles[topicIndex];
+                ui.topicPromptTitle.classList.remove('is-changing');
+            }, 180);
+        }, 2500);
+    };
 
     const request = async (url, options = {}) => {
         const response = await fetch(url, {
@@ -680,6 +720,8 @@
             preventZoom(event);
         }
     }, { passive: false });
+
+    startTopicPrompt();
 
     Promise.all([setupRive(), request(config.statusUrl)])
         .then(([_, status]) => {

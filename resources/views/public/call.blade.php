@@ -47,6 +47,14 @@
             </div>
         </section>
 
+        @if($topicTitles !== [])
+            <aside class="topic-prompt" aria-live="polite">
+                <span>Pregúntame sobre:</span>
+                <strong id="topicPromptTitle">{{ $topicTitles[0] }}</strong>
+            </aside>
+            <script id="topicPromptTitles" type="application/json">@json($topicTitles)</script>
+        @endif
+
         <footer class="call-controls">
             <button id="hangupButton" class="control hangup" type="button" aria-label="Colgar llamada">
                 <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">

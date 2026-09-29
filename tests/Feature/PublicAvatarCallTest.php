@@ -104,6 +104,32 @@ class PublicAvatarCallTest extends TestCase
             ->assertSee('/storage/avatars/ica-demo/backgrounds/plaza.webp', false);
     }
 
+    public function test_call_renders_topic_titles_from_the_active_conversation_tree(): void
+    {
+        [, $version] = $this->publishedAvatar();
+        $tree = $version->tree;
+        $tree['topics'][0]['title'] = 'Agua y saneamiento';
+        $tree['topics'][1]['title'] = 'Seguridad ciudadana';
+        $version->update(['tree' => $tree]);
+
+        $this->get('/llamada')
+            ->assertOk()
+            ->assertSee('Pregúntame sobre:')
+            ->assertSee('Agua y saneamiento')
+            ->assertSee('Seguridad ciudadana')
+            ->assertSee('id="topicPromptTitles"', false);
+    }
+
+    public function test_call_hides_the_topic_prompt_without_an_active_conversation_version(): void
+    {
+        Avatar::factory()->create(['slug' => 'ica-demo', 'status' => 'published']);
+
+        $this->get('/llamada')
+            ->assertOk()
+            ->assertDontSee('Pregúntame sobre:')
+            ->assertDontSee('id="topicPromptTitles"', false);
+    }
+
     public function test_returns_404_when_audio_transcription_is_requested(): void
     {
         $this->publishedAvatar();
