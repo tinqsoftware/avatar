@@ -92,7 +92,7 @@ class AvatarController extends Controller
      */
     private function attributes(StoreAvatarRequest|UpdateAvatarRequest $request, ?Avatar $avatar = null): array
     {
-        $attributes = $request->safe()->except(['rive', 'background', 'status']);
+        $attributes = $request->safe()->except(['rive', 'background', 'social_image', 'status']);
         $attributes['status'] = $avatar?->status ?? 'draft';
 
         if (config('avatar.audio_role') !== 'studio') {
@@ -136,6 +136,14 @@ class AvatarController extends Controller
             }
 
             $attributes['background_path'] = $request->file('background')->store("avatars/{$request->string('slug')}/backgrounds", 'public');
+        }
+
+        if ($request->hasFile('social_image')) {
+            if ($avatar?->social_image_path && str_starts_with($avatar->social_image_path, 'avatars/')) {
+                Storage::disk('public')->delete($avatar->social_image_path);
+            }
+
+            $attributes['social_image_path'] = $request->file('social_image')->store("avatars/{$request->string('slug')}/social-images", 'public');
         }
 
         return $attributes;

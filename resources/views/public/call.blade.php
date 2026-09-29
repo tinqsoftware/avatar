@@ -1,6 +1,7 @@
 @php
     $callCssUrl = asset('css/avatar-call.css').'?v='.filemtime(public_path('css/avatar-call.css'));
     $callScriptUrl = asset('js/avatar-call.js').'?v='.filemtime(public_path('js/avatar-call.js'));
+    $shareDescription = "Conversación con {$avatar->name}: {$avatar->public_title}";
 @endphp
 <!doctype html>
 <html lang="es">
@@ -9,6 +10,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Llamada con {{ $avatar->name }}</title>
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ url()->current() }}">
+    <meta property="og:title" content="{{ $avatar->public_title }}">
+    <meta property="og:description" content="{{ $shareDescription }}">
+    @if($socialImageUrl)
+        <meta property="og:image" content="{{ url($socialImageUrl) }}">
+        <meta name="twitter:card" content="summary_large_image">
+    @endif
     <link rel="stylesheet" href="{{ $callCssUrl }}">
 </head>
 <body class="call-body">

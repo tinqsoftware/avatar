@@ -21,6 +21,7 @@
     @endif
     <label>Archivo Rive (.riv)<input type="file" name="rive" accept=".riv"><small>Opcional. Debe incluir Avatar, AvatarStateMachine, ViewModel1 y viseme.</small></label>
     <label>Fondo de la llamada<input type="file" name="background" accept="image/jpeg,image/png,image/webp"><small>Opcional. JPG, PNG o WebP hasta 10 MB; se muestra detrás del avatar.</small></label>
+    <label>Imagen al compartir en WhatsApp y redes<input type="file" name="social_image" accept="image/jpeg,image/png,image/webp"><small>Opcional. JPG, PNG o WebP hasta 10 MB. Recomendado: 1200 × 630 px.</small></label>
     <button class="button" type="submit">{{ $avatar->exists ? 'Guardar cambios' : 'Crear avatar' }}</button>
 </form>
 @if($studio)

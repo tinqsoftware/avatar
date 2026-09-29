@@ -23,6 +23,7 @@ class Avatar extends Model
         'voice_sample_path',
         'rive_path',
         'background_path',
+        'social_image_path',
         'status',
     ];
 

@@ -13,7 +13,12 @@ class PublicAvatarController extends Controller
 {
     public function landing(Request $request): View
     {
-        return view('public.landing', ['avatar' => $this->avatar($request)]);
+        $avatar = $this->avatar($request);
+
+        return view('public.landing', [
+            'avatar' => $avatar,
+            'socialImageUrl' => $this->publicStorageUrl($avatar->social_image_path),
+        ]);
     }
 
     public function call(Request $request, StaticConversationService $conversation): View
@@ -68,6 +73,7 @@ class PublicAvatarController extends Controller
             'avatar' => $avatar,
             'preview' => $preview,
             'backgroundUrl' => $this->publicStorageUrl($avatar->background_path),
+            'socialImageUrl' => $this->publicStorageUrl($avatar->social_image_path),
             'riveUrl' => $this->publicStorageUrl($avatar->rive_path) ?? asset('assets/avatar/anita.riv'),
             'topicTitles' => $conversation->topicTitles($avatar, $preview),
         ]);

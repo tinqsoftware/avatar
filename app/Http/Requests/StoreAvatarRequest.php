@@ -33,6 +33,7 @@ class StoreAvatarRequest extends FormRequest
             'voice_locale' => ['nullable', Rule::in(['es-PE'])],
             'rive' => ['nullable', 'file', 'extensions:riv', 'max:20480'],
             'background' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:10240', 'dimensions:max_width=4096,max_height=4096'],
+            'social_image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:10240', 'dimensions:max_width=4096,max_height=4096'],
         ];
     }
 }

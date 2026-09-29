@@ -104,6 +104,21 @@ class PublicAvatarCallTest extends TestCase
             ->assertSee('/storage/avatars/ica-demo/backgrounds/plaza.webp', false);
     }
 
+    public function test_public_avatar_pages_render_the_social_share_image(): void
+    {
+        [$avatar] = $this->publishedAvatar();
+        $avatar->update(['social_image_path' => 'avatars/ica-demo/social-images/compartir.png']);
+        $imageUrl = url('/storage/avatars/ica-demo/social-images/compartir.png');
+
+        $this->get('/')
+            ->assertSee('<meta property="og:image" content="'.$imageUrl.'">', false)
+            ->assertSee('<meta name="twitter:card" content="summary_large_image">', false);
+
+        $this->get('/llamada')
+            ->assertSee('<meta property="og:image" content="'.$imageUrl.'">', false)
+            ->assertSee('<meta name="twitter:card" content="summary_large_image">', false);
+    }
+
     public function test_call_renders_topic_titles_from_the_active_conversation_tree(): void
     {
         [, $version] = $this->publishedAvatar();

@@ -82,6 +82,70 @@ class AdminAvatarTest extends TestCase
         ])->assertSessionHasErrors('background');
     }
 
+    public function test_admin_can_store_a_social_share_image_for_an_avatar(): void
+    {
+        config(['avatar.audio_role' => 'delivery']);
+        Storage::fake('public');
+        $admin = User::factory()->create(['is_admin' => true]);
+
+        $this->actingAs($admin)->post('/admin/avatars', [
+            'name' => 'Sofía',
+            'slug' => 'sofia-ica',
+            'public_title' => 'Demostración Ica',
+            'voice_mode' => 'synthetic',
+            'voice_profile' => 'anita',
+            'social_image' => UploadedFile::fake()->image('compartir.png', 1200, 630),
+        ])->assertRedirect();
+
+        $avatar = Avatar::where('slug', 'sofia-ica')->firstOrFail();
+
+        $this->assertNotNull($avatar->social_image_path);
+        Storage::disk('public')->assertExists($avatar->social_image_path);
+    }
+
+    public function test_admin_cannot_upload_a_non_image_social_share_image(): void
+    {
+        config(['avatar.audio_role' => 'delivery']);
+        $admin = User::factory()->create(['is_admin' => true]);
+
+        $this->actingAs($admin)->post('/admin/avatars', [
+            'name' => 'Sofía',
+            'slug' => 'sofia-ica',
+            'public_title' => 'Demostración Ica',
+            'voice_mode' => 'synthetic',
+            'voice_profile' => 'anita',
+            'social_image' => UploadedFile::fake()->create('compartir.pdf', 25, 'application/pdf'),
+        ])->assertSessionHasErrors('social_image');
+    }
+
+    public function test_admin_replaces_the_previous_social_share_image(): void
+    {
+        config(['avatar.audio_role' => 'delivery']);
+        Storage::fake('public');
+        Storage::disk('public')->put('avatars/sofia-ica/social-images/old.png', 'old social image');
+        $admin = User::factory()->create(['is_admin' => true]);
+        $avatar = Avatar::factory()->create([
+            'slug' => 'sofia-ica',
+            'social_image_path' => 'avatars/sofia-ica/social-images/old.png',
+        ]);
+
+        $this->actingAs($admin)->put("/admin/avatars/{$avatar->id}", [
+            'name' => $avatar->name,
+            'slug' => $avatar->slug,
+            'public_title' => $avatar->public_title,
+            'status' => $avatar->status,
+            'voice_mode' => 'synthetic',
+            'voice_profile' => 'anita',
+            'social_image' => UploadedFile::fake()->image('nuevo.png', 1200, 630),
+        ])->assertRedirect();
+
+        $avatar->refresh();
+
+        $this->assertNotSame('avatars/sofia-ica/social-images/old.png', $avatar->social_image_path);
+        Storage::disk('public')->assertMissing('avatars/sofia-ica/social-images/old.png');
+        Storage::disk('public')->assertExists($avatar->social_image_path);
+    }
+
     public function test_admin_replaces_the_previous_avatar_background(): void
     {
         Storage::fake('public');
