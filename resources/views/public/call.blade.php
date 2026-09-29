@@ -42,7 +42,7 @@
                 <div class="avatar-halo"></div>
                 <canvas id="avatarCanvas" aria-label="Avatar animado de {{ $avatar->name }}"></canvas>
                 <button id="startConversation" class="start-conversation" type="button" hidden>
-                    Iniciar conversación
+                    INICIAR CONVERSACIÓN
                 </button>
             </div>
         </section>
