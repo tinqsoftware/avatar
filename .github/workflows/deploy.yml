@@ -59,12 +59,20 @@ jobs:
           VPS_HOST: ${{ secrets.VPS_HOST }}
           VPS_PORT: ${{ secrets.VPS_PORT }}
           RELEASE: ${{ github.sha }}
+          GOOGLE_ANALYTICS_MEASUREMENT_ID: ${{ vars.GOOGLE_ANALYTICS_MEASUREMENT_ID }}
         run: |
-          ssh -p "${VPS_PORT:-22}" deploy@"$VPS_HOST" "RELEASE=/var/www/avatar/releases/$RELEASE bash -s" <<'REMOTE'
+          ssh -p "${VPS_PORT:-22}" deploy@"$VPS_HOST" "RELEASE=/var/www/avatar/releases/$RELEASE GOOGLE_ANALYTICS_MEASUREMENT_ID='$GOOGLE_ANALYTICS_MEASUREMENT_ID' bash -s" <<'REMOTE'
           set -euo pipefail
           cd "$RELEASE"
           ln -sfn /var/www/avatar/shared/.env .env
           ln -sfn /var/www/avatar/shared/storage storage
+          if [ -n "${GOOGLE_ANALYTICS_MEASUREMENT_ID:-}" ]; then
+            if grep -q '^GOOGLE_ANALYTICS_MEASUREMENT_ID=' /var/www/avatar/shared/.env; then
+              sed -i "s/^GOOGLE_ANALYTICS_MEASUREMENT_ID=.*/GOOGLE_ANALYTICS_MEASUREMENT_ID=${GOOGLE_ANALYTICS_MEASUREMENT_ID}/" /var/www/avatar/shared/.env
+            else
+              printf '\nGOOGLE_ANALYTICS_MEASUREMENT_ID=%s\n' "$GOOGLE_ANALYTICS_MEASUREMENT_ID" >> /var/www/avatar/shared/.env
+            fi
+          fi
           composer install --no-dev --prefer-dist --no-interaction --optimize-autoloader
           php artisan migrate --force
           php artisan storage:link
